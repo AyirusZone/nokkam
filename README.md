@@ -1,34 +1,81 @@
-# cad-tui
+# cad
 
-A calcurse-inspired terminal task manager and calendar, styled with a
-Material-tonal / Apple-HIG color system. Local-first — everything lives in a
-single SQLite file, nothing leaves your machine.
+A calcurse-inspired terminal task manager and calendar. Calendar and tasks
+live side by side on one home screen — no mode-switching to see what's due.
+Local-first: everything lives in a single SQLite file, nothing leaves your
+machine.
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ cad / home                                        July 2026  │
+├─────────────────┬──────────────────────────────────────────┤
+│  mo tu we th fr  │ Saturday, 25 July 2026                    │
+│  sa su           │    Design system spec        2026-07-25  │
+│                  │    Standup              2026-07-25 09:00 │
+│  29 30  1  2  3  │ ────────────────────────────────────────  │
+│   4  5▓ 6  7  8  │ All tasks                                 │
+│   9 10 11 12 13  │    Design system spec        2026-07-25  │
+│  ...             │    Standup              2026-07-25 09:00 │
+│                  │    Weekly review             2026-07-28  │
+│                  │    Read newsletter                        │
+├─────────────────┴──────────────────────────────────────────┤
+│ [ Prev  ] Next  t Today/Timer  a Add  e Edit  d Delete  ...  │
+└──────────────────────────────────────────────────────────────┘
+```
 
 ## Features
 
-- **Tasks** — priority, due date/time, projects, tags, subtasks, recurrence
-  (daily/weekly/monthly), dependencies ("blocked by"), undo for every
-  destructive action
-- **Calendar** — month grid linked to tasks, day/week/month navigation,
-  mouse and keyboard, jump-to-today
-- **Agenda** — rolling 14-day view of what's coming up
-- **Command palette** (`Ctrl+K`) — fuzzy-search tasks to jump to them, or run
-  any action (add, undo, open calendar/agenda/stats, smart-list filters)
-- **Quick add** — free-text capture with natural-language dates, e.g.
-  `Buy milk tmrw 3pm`, `Standup fri 9:30`
-- **Smart lists** — Today, Overdue, This week, All
-- **Time tracking** — start/stop a timer per task; **Pomodoro** — 25/5 focus
-  timer
-- **Stats** — completion rate, streak, GitHub-style contribution heatmap
-- **Reminders** — due-soon desktop notifications (macOS, Linux, Windows), deduplicated
-- **Import/export** — JSON, CSV, and ICS (calendar interop)
-- **CLI quick-capture** — add a task from your shell without opening the UI
-- Light/dark theme with a single configurable accent color
+**Tasks**
+- Priority (high/medium/low), due date + time, projects, tags
+- Subtasks with indented tree display
+- Recurrence — daily/weekly/monthly; completing a recurring task
+  automatically spawns the next occurrence
+- Dependencies — mark a task "blocked by" another; completing a blocked
+  task is refused until its blocker is done
+- Undo — every add/edit/delete/toggle can be undone with `u`
+
+**Calendar (always visible, not a separate mode)**
+- Month grid with a task-count dot on any day that has tasks due
+- Keyboard (`h j k l` / arrows, `[` `]` for month) or mouse (click a day)
+- The right-hand panes update live to whichever day is selected
+
+**Quick add** — free-text capture with natural-language dates:
+`Buy milk tmrw 3pm`, `Standup fri 9:30`, `Follow up in 3 days`
+
+**Command palette** (`Ctrl+K`) — fuzzy-search tasks to jump to one, or run
+any action: Add task, Quick add, Undo, Focus calendar, Open agenda, Show
+stats, Pomodoro, Smart list: Today/Overdue/This week/All
+
+**Smart lists** — Today, Overdue, This week, All (filters the task list
+in place; shown in the header)
+
+**Agenda** — rolling 14-day view of everything upcoming, chronological
+
+**Stats** — completion rate, current streak, overdue count, and a
+GitHub-style contribution heatmap of the last 12 weeks
+
+**Time tracking** — start/stop a timer on the selected task (starting a
+new one stops whatever was running); **Pomodoro** — 25/5 focus timer with
+pause/reset
+
+**Reminders** — due-soon desktop notifications (macOS, Linux, Windows),
+each task surfaced only once
+
+**Import/export** — JSON and CSV round-trip tasks including tags; ICS
+export for calendar apps
+
+**CLI quick-capture** — `cad-tui add "..."` writes a task from your shell
+without opening the UI
+
+**Design** — a considered visual system, not default Textual chrome: warm
+near-black/linen-white neutrals, a single configurable signature accent
+(vermillion by default), priority shown as a colored accent bar rather than
+an icon, light/dark theme (`Ctrl+T`)
 
 ## Install
 
-Requires Python 3.11+. Runs anywhere Textual does — macOS, Linux, and Windows
-(Windows Terminal recommended for full color/glyph support).
+Requires Python 3.11+. Runs anywhere Textual does — macOS, Linux, and
+Windows (Windows Terminal recommended for full color/glyph support).
 
 **From PyPI** (once published):
 
@@ -55,54 +102,63 @@ The only runtime dependency is [Textual](https://github.com/Textualize/textual)
 cad-tui
 ```
 
-launches the full-screen UI. Your data lives in `~/.cad-tui/data.db`
-(SQLite) — nothing else to set up.
+launches the home screen: calendar on the left, the selected day's tasks
+top-right, the full task list bottom-right. Data lives in
+`~/.cad-tui/data.db` (SQLite) — nothing else to set up.
+
+### Panes and focus
+
+`Tab` cycles focus between the three panes (calendar → today's tasks → all
+tasks). Which pane is focused changes what a few keys do:
+
+- `t` — jumps the calendar to today if the calendar pane is focused,
+  otherwise starts/stops the timer on the selected task
+- `a` — adding a task defaults its due date to the selected calendar day
+  when the calendar or day pane is focused, otherwise leaves it blank
+
+Everything else (`e` edit, `d` delete, `space` toggle complete, `s` add
+subtask) acts on whichever task is currently selected, in whichever pane
+has focus.
 
 ### Keybindings
 
-**Task list**
-
 | Key | Action |
 |---|---|
+| `Tab` | Cycle focus: calendar / today's tasks / all tasks |
+| `h` `j` `k` `l` / arrows | Move — day+week in the calendar, line in a task list |
+| `[` / `]` | Previous / next month |
+| `t` | Jump to today (calendar focused) or start/stop timer (task focused) |
 | `a` | Add task |
 | `e` | Edit selected task |
 | `d` | Delete selected task |
 | `space` | Toggle complete |
-| `j` / `↓`, `k` / `↑` | Move down / up |
-| `u` | Undo last action |
 | `s` | Add subtask under selected |
-| `A` | Quick add (free text with natural-language date) |
-| `c` | Open calendar |
+| `u` | Undo last action |
+| `A` | Quick add (free text with a natural-language date) |
 | `w` | Open agenda (next 14 days) |
 | `S` | Open stats |
-| `t` | Start/stop timer on selected task |
 | `P` | Open Pomodoro (25/5 focus timer) |
-| `?` | Help |
-
-**Calendar**
-
-| Key | Action |
-|---|---|
-| `h` `j` `k` `l` / arrows | Move day / week (or click a day) |
-| `[` / `]` | Previous / next month |
-| `t` | Jump to today |
-| `a` `d` `space` | Add / delete / toggle complete (for the selected day) |
-| `esc` | Back to task list |
-
-**Command palette** (`Ctrl+K`)
-
-Fuzzy-search your tasks to jump to one, or run: Add task, Quick add, Undo,
-Open calendar, Open agenda, Show stats, Smart list: Today/Overdue/This
-week/All tasks.
-
-**Global**
-
-| Key | Action |
-|---|---|
 | `Ctrl+T` | Toggle light/dark theme |
 | `Ctrl+K` | Command palette |
+| `?` | Help |
 | `q` | Quit |
-| `esc` | Close current dialog |
+| `esc` | Close current dialog / go back |
+
+Clicking a calendar day with the mouse selects it, same as navigating to
+it with the keyboard.
+
+### Task fields
+
+The add/edit form covers: title, notes, priority, due date + time,
+project, tags (comma-separated), repeats (none/daily/weekly/monthly), and
+"blocked by" (matched against an existing task's title). A subtask is
+created the same way, just pinned under the task you had selected when you
+pressed `s`.
+
+Completing a task that's still blocked is refused with a warning instead
+of silently succeeding. Completing a recurring task spawns its next
+occurrence automatically, carrying over title, priority, project, and
+tags.
 
 ### CLI quick-capture
 
