@@ -1,4 +1,4 @@
-"""cad-tui entrypoint. Phase 1: scaffold, migrations, theme toggle."""
+"""cad-tui entrypoint. Wires config -> db -> repositories -> services -> UI."""
 
 from __future__ import annotations
 
@@ -9,8 +9,13 @@ from textual.app import App
 from cad_tui.config import AppConfig, load_config
 from cad_tui.data.db import connect
 from cad_tui.data.migrations import apply_migrations
-from cad_tui.presentation.screens.home import HomeScreen
+from cad_tui.data.repositories.project_repository import ProjectRepository
+from cad_tui.data.repositories.tag_repository import TagRepository
+from cad_tui.data.repositories.task_repository import TaskRepository
+from cad_tui.presentation.screens.task_list import TaskListScreen
 from cad_tui.presentation.theme import THEMES
+from cad_tui.services.task_service import TaskService
+from cad_tui.services.undo import UndoStack
 
 
 class CadTuiApp(App):
@@ -33,7 +38,13 @@ class CadTuiApp(App):
         self.db = connect(self.config.db_path)
         apply_migrations(self.db)
 
-        self.push_screen(HomeScreen())
+        self.task_repo = TaskRepository(self.db)
+        self.project_repo = ProjectRepository(self.db)
+        self.tag_repo = TagRepository(self.db)
+        self.undo_stack = UndoStack()
+        self.task_service = TaskService(self.task_repo, self.undo_stack)
+
+        self.push_screen(TaskListScreen())
 
     def on_unmount(self) -> None:
         if self.db is not None:

@@ -31,3 +31,48 @@ Screen {
     color: $accent;
     text-style: bold;
 }
+
+TaskFormModal, HelpModal {
+    align: center middle;
+    background: $background 60%;
+}
+
+#task-form {
+    width: 60;
+    height: auto;
+    max-height: 100%;
+    padding: 1 2;
+}
+
+#task-form Label {
+    color: $foreground 70%;
+}
+
+#task-form Input, #task-form Select {
+    height: 1;
+    border: none;
+    background: $panel;
+}
+
+#help-panel {
+    width: 50;
+    height: auto;
+    padding: $space-md;
+}
+
+ListView {
+    background: $background;
+}
+
+ListItem {
+    padding: 0 $space-sm;
+}
+
+ListItem:hover {
+    background: $panel;
+}
+
+ListView > ListItem.-highlight {
+    background: $surface;
+    border-left: thick $accent;
+}
