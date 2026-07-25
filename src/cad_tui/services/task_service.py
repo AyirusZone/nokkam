@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from cad_tui.data.repositories.dependency_repository import DependencyRepository
 from cad_tui.data.repositories.recurrence_repository import RecurrenceRepository
 from cad_tui.data.repositories.task_repository import TaskRepository
 from cad_tui.domain.models import Status, Task
@@ -18,10 +19,22 @@ class TaskService:
         repo: TaskRepository,
         undo_stack: UndoStack,
         recurrence_repo: RecurrenceRepository | None = None,
+        dependency_repo: DependencyRepository | None = None,
     ) -> None:
         self.repo = repo
         self.undo = undo_stack
         self.recurrence_repo = recurrence_repo
+        self.dependency_repo = dependency_repo
+
+    def is_blocked(self, task_id: int) -> bool:
+        if self.dependency_repo is None:
+            return False
+        return self.dependency_repo.is_blocked(task_id)
+
+    def set_blocked_by(self, task_id: int, blocker_task_id: int | None) -> None:
+        if self.dependency_repo is None:
+            return
+        self.dependency_repo.set_blocked_by(task_id, blocker_task_id)
 
     def list_tasks(self, **filters) -> list[Task]:
         return self.repo.list(**filters)

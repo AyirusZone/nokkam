@@ -106,6 +106,16 @@ MIGRATIONS: list[tuple[int, str]] = [
         CREATE INDEX idx_usage_log_action ON usage_log(action, ts);
         """,
     ),
+    (
+        2,
+        """
+        CREATE TABLE task_dependency (
+            task_id INTEGER NOT NULL REFERENCES task(id) ON DELETE CASCADE,
+            blocked_by_task_id INTEGER NOT NULL REFERENCES task(id) ON DELETE CASCADE,
+            PRIMARY KEY (task_id, blocked_by_task_id)
+        );
+        """,
+    ),
 ]
 
 

@@ -16,7 +16,7 @@ from cad_tui.domain.recurrence import RecurrenceRule
 from cad_tui.presentation.screens.help import HelpModal
 from cad_tui.presentation.screens.task_form import TaskFormModal, TaskFormResult
 from cad_tui.presentation.screens.task_list import TaskRow
-from cad_tui.presentation.widgets.calendar_grid import CalendarGrid
+from cad_tui.presentation.widgets.calendar_grid import CalendarGrid, DayCell
 
 
 class CalendarScreen(Screen):
@@ -55,6 +55,10 @@ class CalendarScreen(Screen):
     @property
     def day_list(self) -> ListView:
         return self.query_one("#day-tasks", ListView)
+
+    def on_day_cell_selected(self, message: DayCell.Selected) -> None:
+        self.calendar.focus_date = message.day
+        self.refresh_all()
 
     def refresh_all(self) -> None:
         fd = self.calendar.focus_date

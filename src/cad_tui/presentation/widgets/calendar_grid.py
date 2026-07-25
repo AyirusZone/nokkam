@@ -7,6 +7,7 @@ from datetime import date
 
 from textual.app import ComposeResult
 from textual.containers import Grid
+from textual.message import Message
 from textual.widget import Widget
 from textual.widgets import Static
 
@@ -14,6 +15,11 @@ WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
 
 
 class DayCell(Static):
+    class Selected(Message):
+        def __init__(self, day: date) -> None:
+            self.day = day
+            super().__init__()
+
     def __init__(self, day: date, count: int, classes: str = "") -> None:
         super().__init__(classes=classes)
         self.day = day
@@ -22,6 +28,9 @@ class DayCell(Static):
     def render(self) -> str:
         marker = "•" if self.count else " "
         return f"{self.day.day:>2}{marker}"
+
+    def on_click(self) -> None:
+        self.post_message(self.Selected(self.day))
 
 
 class CalendarGrid(Widget):

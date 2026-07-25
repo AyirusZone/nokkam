@@ -41,7 +41,7 @@ TaskFormModal, HelpModal, QuickAddModal {
     width: 60;
     height: auto;
     max-height: 100%;
-    padding: 1 2;
+    padding: 0 2;
 }
 
 #task-form Label {
@@ -52,6 +52,15 @@ TaskFormModal, HelpModal, QuickAddModal {
     height: 1;
     border: none;
     background: $panel;
+}
+
+#task-form .field-row {
+    height: 1;
+}
+
+#task-form .field-row Input, #task-form .field-row Select {
+    width: 1fr;
+    margin-right: 1;
 }
 
 #help-panel {

@@ -31,6 +31,7 @@ class TaskFormResult:
     project_name: str | None
     tag_names: list[str]
     recurrence: str
+    blocked_by_title: str | None
 
 
 class TaskFormModal(ModalScreen[TaskFormResult | None]):
@@ -44,6 +45,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         default_due_date: str = "",
         recurrence: str = "",
         parent_title: str = "",
+        blocked_by_title: str = "",
     ) -> None:
         super().__init__()
         self.editing = task
@@ -52,6 +54,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         self._default_due_date = default_due_date
         self._recurrence = recurrence
         self._parent_title = parent_title
+        self._blocked_by_title = blocked_by_title
 
     def compose(self) -> ComposeResult:
         t = self.editing
@@ -65,23 +68,29 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
             yield Input(value=t.title if t else "", id="title", placeholder="Task title")
             yield Label("Notes")
             yield Input(value=(t.notes or "") if t else "", id="notes", placeholder="Optional")
-            yield Label("Priority")
-            yield Select(
-                PRIORITY_OPTIONS,
-                value=t.priority if t else Priority.MEDIUM,
-                id="priority",
-                allow_blank=False,
-            )
-            yield Label("Due date (YYYY-MM-DD)")
-            yield Input(value=due_date_value, id="due_date", placeholder="2026-08-01")
-            yield Label("Due time (HH:MM)")
-            yield Input(value=(t.due_time or "") if t else "", id="due_time", placeholder="14:30")
-            yield Label("Project")
-            yield Input(value=self._project_name, id="project", placeholder="Optional project")
-            yield Label("Tags (comma separated)")
-            yield Input(value=self._tag_names, id="tags", placeholder="home, urgent")
-            yield Label("Repeats")
-            yield Select(RECURRENCE_OPTIONS, value=self._recurrence, id="recurrence", allow_blank=False)
+            yield Label("Due date (YYYY-MM-DD)  /  Due time (HH:MM)")
+            with Horizontal(classes="field-row"):
+                yield Input(value=due_date_value, id="due_date", placeholder="2026-08-01")
+                yield Input(
+                    value=(t.due_time or "") if t else "", id="due_time", placeholder="14:30"
+                )
+            yield Label("Priority  /  Repeats")
+            with Horizontal(classes="field-row"):
+                yield Select(
+                    PRIORITY_OPTIONS,
+                    value=t.priority if t else Priority.MEDIUM,
+                    id="priority",
+                    allow_blank=False,
+                )
+                yield Select(
+                    RECURRENCE_OPTIONS, value=self._recurrence, id="recurrence", allow_blank=False
+                )
+            yield Label("Project  /  Tags (comma separated)")
+            with Horizontal(classes="field-row"):
+                yield Input(value=self._project_name, id="project", placeholder="Optional project")
+                yield Input(value=self._tag_names, id="tags", placeholder="home, urgent")
+            yield Label("Blocked by (task title)")
+            yield Input(value=self._blocked_by_title, id="blocked_by", placeholder="Optional")
             with Horizontal():
                 yield Button("Save", variant="primary", id="save")
                 yield Button("Cancel", id="cancel")
@@ -102,6 +111,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         project_name = self.query_one("#project", Input).value.strip() or None
         tag_names = [t for t in self.query_one("#tags", Input).value.split(",") if t.strip()]
         recurrence = self.query_one("#recurrence", Select).value
+        blocked_by_title = self.query_one("#blocked_by", Input).value.strip() or None
 
         self.dismiss(
             TaskFormResult(
@@ -113,6 +123,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
                 project_name=project_name,
                 tag_names=tag_names,
                 recurrence=recurrence,
+                blocked_by_title=blocked_by_title,
             )
         )
 

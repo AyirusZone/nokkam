@@ -43,3 +43,43 @@ def compute_stats(task_service: TaskService) -> Stats:
         completion_rate=rate,
         streak_days=streak,
     )
+
+
+def daily_completion_counts(task_service: TaskService, since: date) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    since_iso = since.isoformat()
+    for t in task_service.list_tasks(status=Status.DONE):
+        if not t.completed_at:
+            continue
+        day = t.completed_at[:10]
+        if day < since_iso:
+            continue
+        counts[day] = counts.get(day, 0) + 1
+    return counts
+
+
+_HEATMAP_DENSITY = " ░▒▓█"
+HEATMAP_WEEKS = 12
+HEATMAP_WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+
+def build_heatmap_lines(
+    counts: dict[str, int], weeks: int = HEATMAP_WEEKS, today: date | None = None
+) -> list[str]:
+    """7 lines (Mon..Sun), each `weeks` chars wide — one rolling 7-day column
+    per week, most recent on the right."""
+    today = today or date.today()
+    total_days = weeks * 7
+    start = today - timedelta(days=total_days - 1)
+    grid = [[" "] * weeks for _ in range(7)]
+
+    cursor = start
+    for day_index in range(total_days):
+        week_idx = day_index // 7
+        weekday = cursor.weekday()
+        count = counts.get(cursor.isoformat(), 0)
+        symbol = _HEATMAP_DENSITY[min(count, len(_HEATMAP_DENSITY) - 1)]
+        grid[weekday][week_idx] = symbol
+        cursor += timedelta(days=1)
+
+    return ["".join(row) for row in grid]

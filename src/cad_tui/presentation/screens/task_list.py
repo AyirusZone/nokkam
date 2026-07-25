@@ -31,13 +31,14 @@ class TaskRow(ListItem):
         indent = "  " * self.depth
         recurring = " ↻" if self.model.recurrence_id else ""
         timing = " [accent]⏱[/]" if self.app.time_tracking.active_task_id == self.model.id else ""
+        blocked = " [warning]⛔[/]" if not done and self.app.task_service.is_blocked(self.model.id) else ""
         due = ""
         if self.model.due_date:
             due = f"  [dim]{self.model.due_date} {self.model.due_time or ''}[/]".rstrip()
         title = self.model.title
         if done:
             title = f"[dim strike]{title}[/]"
-        yield Static(f"{indent}[{check}] {icon}  {title}{recurring}{timing}{due}")
+        yield Static(f"{indent}[{check}] {icon}  {title}{recurring}{timing}{blocked}{due}")
 
 
 class TaskListScreen(Screen):
@@ -143,7 +144,10 @@ class TaskListScreen(Screen):
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
                 recurrence_id=self._resolve_recurrence(result.recurrence, None),
             )
-            self.app.task_service.add_task(task)
+            created = self.app.task_service.add_task(task)
+            self.app.task_service.set_blocked_by(
+                created.id, self._resolve_blocker(result.blocked_by_title)
+            )
             self.refresh_tasks()
 
         self.app.push_screen(TaskFormModal(), on_result)
@@ -167,7 +171,10 @@ class TaskListScreen(Screen):
                 recurrence_id=self._resolve_recurrence(result.recurrence, None),
                 parent_task_id=parent.id,
             )
-            self.app.task_service.add_task(task)
+            created = self.app.task_service.add_task(task)
+            self.app.task_service.set_blocked_by(
+                created.id, self._resolve_blocker(result.blocked_by_title)
+            )
             self.refresh_tasks()
 
         self.app.push_screen(TaskFormModal(parent_title=parent.title), on_result)
@@ -192,6 +199,8 @@ class TaskListScreen(Screen):
         recurrence_rule = (
             self.app.recurrence_repo.get(task.recurrence_id) if task.recurrence_id else None
         )
+        blocker_id = self.app.dependency_repo.get_blocker_id(task.id)
+        blocker = self.app.task_repo.get(blocker_id) if blocker_id else None
 
         def on_result(result: TaskFormResult | None) -> None:
             if result is None:
@@ -207,6 +216,9 @@ class TaskListScreen(Screen):
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
                 recurrence_id=self._resolve_recurrence(result.recurrence, task.recurrence_id),
             )
+            self.app.task_service.set_blocked_by(
+                task.id, self._resolve_blocker(result.blocked_by_title)
+            )
             self.refresh_tasks(select_index=index)
 
         self.app.push_screen(
@@ -215,6 +227,7 @@ class TaskListScreen(Screen):
                 project_name=project.name if project else "",
                 tag_names=", ".join(t.name for t in tags),
                 recurrence=recurrence_rule.rule if recurrence_rule else "",
+                blocked_by_title=blocker.title if blocker else "",
             ),
             on_result,
         )
@@ -230,6 +243,13 @@ class TaskListScreen(Screen):
     def action_toggle_complete(self) -> None:
         task = self.selected_task
         if task is None:
+            return
+        if task.status == Status.OPEN and self.app.task_service.is_blocked(task.id):
+            blocker_id = self.app.dependency_repo.get_blocker_id(task.id)
+            blocker = self.app.task_repo.get(blocker_id) if blocker_id else None
+            self.notify(
+                f"Blocked by: {blocker.title if blocker else 'another task'}", severity="warning"
+            )
             return
         index = self.list_view.index
         self.app.task_service.toggle_complete(task.id)
@@ -284,3 +304,12 @@ class TaskListScreen(Screen):
             if existing is not None and existing.rule == rule:
                 return existing_id
         return self.app.recurrence_repo.create(RecurrenceRule(rule=rule))
+
+    def _resolve_blocker(self, title: str | None) -> int | None:
+        if not title:
+            return None
+        needle = title.strip().lower()
+        for t in self.app.task_service.list_tasks():
+            if t.title.lower() == needle:
+                return t.id
+        return None

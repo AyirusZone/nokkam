@@ -6,6 +6,7 @@ from cad_tui.data.migrations import apply_migrations
 EXPECTED_TABLES = {
     "project", "tag", "recurrence", "task", "task_tag",
     "calendar", "event", "time_log", "reminder", "usage_log",
+    "task_dependency",
 }
 
 
@@ -25,7 +26,7 @@ def test_migrations_idempotent_same_connection(tmp_path: Path) -> None:
     conn = connect(tmp_path / "data.db")
     v1 = apply_migrations(conn)
     v2 = apply_migrations(conn)
-    assert v1 == v2 == 1
+    assert v1 == v2 == 2
     conn.close()
 
 
@@ -38,5 +39,5 @@ def test_migrations_idempotent_across_connections(tmp_path: Path) -> None:
 
     conn2 = connect(db_path)
     version = apply_migrations(conn2)
-    assert version == 1
+    assert version == 2
     conn2.close()
