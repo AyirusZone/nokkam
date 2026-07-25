@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import sys
 from typing import Iterable
 
 from textual.app import App, SystemCommand
@@ -131,6 +132,10 @@ class CadTuiApp(App):
 
 
 def main() -> None:
+    if len(sys.argv) > 1:
+        from cad_tui.cli import run_cli
+
+        sys.exit(run_cli(sys.argv[1:]))
     CadTuiApp().run()
 
 
