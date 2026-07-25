@@ -3,7 +3,6 @@ from pathlib import Path
 
 from cad_tui.app import CadTuiApp
 from cad_tui.config import AppConfig
-from cad_tui.presentation.screens.calendar_screen import CalendarScreen
 from cad_tui.presentation.widgets.calendar_grid import DayCell
 
 
@@ -14,13 +13,13 @@ def make_app(tmp_path: Path) -> CadTuiApp:
 async def test_clicking_day_cell_selects_it(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
-        await app.push_screen(CalendarScreen())
         await pilot.pause()
         screen = app.screen
-        assert isinstance(screen, CalendarScreen)
 
         today = date.today()
-        candidates = [c for c in screen.query(DayCell) if c.day.month == today.month and c.day != today]
+        candidates = [
+            c for c in screen.query(DayCell) if c.day.month == today.month and c.day != today
+        ]
         assert candidates
         target_cell = candidates[0]
 
@@ -33,7 +32,6 @@ async def test_clicking_day_cell_selects_it(tmp_path: Path) -> None:
 async def test_clicking_other_month_cell_switches_month(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
-        await app.push_screen(CalendarScreen())
         await pilot.pause()
         screen = app.screen
 
@@ -51,7 +49,6 @@ async def test_clicking_other_month_cell_switches_month(tmp_path: Path) -> None:
 async def test_click_event_posts_selected_message(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
-        await app.push_screen(CalendarScreen())
         await pilot.pause()
         screen = app.screen
 

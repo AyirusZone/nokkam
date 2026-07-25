@@ -50,8 +50,8 @@ async def test_agenda_toggle_complete_then_undo(tmp_path: Path) -> None:
         assert len(screen.list_view.children) == 1
 
 
-async def test_agenda_back_returns_to_task_list(tmp_path: Path) -> None:
-    from cad_tui.presentation.screens.task_list import TaskListScreen
+async def test_agenda_back_returns_to_home(tmp_path: Path) -> None:
+    from cad_tui.presentation.screens.home_screen import HomeScreen
 
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
@@ -59,4 +59,4 @@ async def test_agenda_back_returns_to_task_list(tmp_path: Path) -> None:
         await pilot.pause()
         app.screen.action_back()
         await pilot.pause()
-        assert isinstance(app.screen, TaskListScreen)
+        assert isinstance(app.screen, HomeScreen)

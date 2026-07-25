@@ -33,7 +33,7 @@ class DayCell(Static):
         self.post_message(self.Selected(self.day))
 
 
-class CalendarGrid(Widget):
+class CalendarGrid(Widget, can_focus=True):
     def __init__(self, id: str | None = None) -> None:
         super().__init__(id=id)
         self.focus_date: date = date.today()

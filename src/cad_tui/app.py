@@ -21,7 +21,7 @@ from cad_tui.data.repositories.task_repository import TaskRepository
 from cad_tui.data.repositories.time_log_repository import TimeLogRepository
 from cad_tui.infra.notification_adapter import send_notification
 from cad_tui.presentation.command_provider import TaskSearchProvider
-from cad_tui.presentation.screens.task_list import TaskListScreen
+from cad_tui.presentation.screens.home_screen import HomeScreen
 from cad_tui.presentation.theme import build_themes
 from cad_tui.services.reminder_service import ReminderService
 from cad_tui.services.task_service import TaskService
@@ -67,7 +67,7 @@ class CadTuiApp(App):
         self.reminder_repo = ReminderRepository(self.db)
         self.reminder_service = ReminderService(self.task_service, self.reminder_repo)
 
-        self.push_screen(TaskListScreen())
+        self.push_screen(HomeScreen())
 
         self._check_reminders()
         self.set_interval(REMINDER_CHECK_INTERVAL_SECONDS, self._check_reminders)
@@ -88,7 +88,7 @@ class CadTuiApp(App):
             self.notify_desktop(f"Due soon: {task.title}", title="cad-tui reminder")
 
     def action_open_pomodoro(self) -> None:
-        self._goto_task_list()
+        self._goto_home()
         from cad_tui.presentation.screens.pomodoro_screen import PomodoroScreen
 
         self.push_screen(PomodoroScreen())
@@ -100,7 +100,9 @@ class CadTuiApp(App):
             "Quick add", "Fast capture, e.g. \"Buy milk tmrw 3pm\"", self._cmd_quick_add
         )
         yield SystemCommand("Undo", "Undo the last action", self._cmd_undo)
-        yield SystemCommand("Open calendar", "Switch to the calendar view", self._cmd_open_calendar)
+        yield SystemCommand(
+            "Focus calendar", "Move focus to the calendar pane", self._cmd_focus_calendar
+        )
         yield SystemCommand(
             "Open agenda", "Rolling 14-day agenda of upcoming tasks", self._cmd_open_agenda
         )
@@ -127,43 +129,40 @@ class CadTuiApp(App):
             "Smart list: All tasks", "Clear the smart-list filter", lambda: self._cmd_smart_list(None)
         )
 
-    def _goto_task_list(self) -> TaskListScreen:
-        while not isinstance(self.screen, TaskListScreen):
+    def _goto_home(self) -> HomeScreen:
+        while not isinstance(self.screen, HomeScreen):
             self.pop_screen()
         return self.screen
 
     def _cmd_add_task(self) -> None:
-        self._goto_task_list().action_add_task()
+        self._goto_home().action_add_task()
 
     def _cmd_quick_add(self) -> None:
-        self._goto_task_list().action_quick_add()
+        self._goto_home().action_quick_add()
 
     def _cmd_undo(self) -> None:
-        self._goto_task_list().action_undo()
+        self._goto_home().action_undo()
 
-    def _cmd_open_calendar(self) -> None:
-        self._goto_task_list()
-        from cad_tui.presentation.screens.calendar_screen import CalendarScreen
-
-        self.push_screen(CalendarScreen())
+    def _cmd_focus_calendar(self) -> None:
+        self._goto_home().focus_calendar()
 
     def _cmd_open_agenda(self) -> None:
-        self._goto_task_list()
+        self._goto_home()
         from cad_tui.presentation.screens.agenda_screen import AgendaScreen
 
         self.push_screen(AgendaScreen())
 
     def _cmd_open_stats(self) -> None:
-        self._goto_task_list()
+        self._goto_home()
         from cad_tui.presentation.screens.stats_screen import StatsScreen
 
         self.push_screen(StatsScreen())
 
     def _cmd_smart_list(self, filter_name: str | None) -> None:
-        self._goto_task_list().set_smart_filter(filter_name)
+        self._goto_home().set_smart_filter(filter_name)
 
     def jump_to_task(self, task_id: int) -> None:
-        self._goto_task_list().select_task_by_id(task_id)
+        self._goto_home().select_task_by_id(task_id)
 
 
 def main() -> None:

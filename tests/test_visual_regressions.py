@@ -81,7 +81,7 @@ async def test_header_and_footer_visible_in_full_render(tmp_path: Path) -> None:
         await pilot.pause()
         joined = " ".join(rendered_texts(app))
         assert "cad" in joined
-        assert "tasks" in joined
+        assert "home" in joined
 
 
 async def test_task_row_badge_uses_theme_color_not_default_foreground(tmp_path: Path) -> None:
@@ -93,7 +93,7 @@ async def test_task_row_badge_uses_theme_color_not_default_foreground(tmp_path: 
         await pilot.pause()
         rid = app.recurrence_repo.create(RecurrenceRule(rule="daily"))
         app.task_service.add_task(Task(title="Recurring", recurrence_id=rid))
-        app.screen.refresh_tasks()
+        app.screen.refresh_all()
         await pilot.pause()
 
         row = next(r for r in app.screen.query(TaskRow) if r.model.title == "Recurring")

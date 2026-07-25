@@ -5,7 +5,7 @@ from textual.widgets import Input
 
 from cad_tui.app import CadTuiApp
 from cad_tui.config import AppConfig
-from cad_tui.presentation.screens.task_list import TaskListScreen
+from cad_tui.presentation.screens.home_screen import HomeScreen
 
 
 def make_app(tmp_path: Path) -> CadTuiApp:
@@ -21,7 +21,7 @@ async def test_quick_add_parses_trailing_date(tmp_path: Path) -> None:
         await pilot.press("enter")
         await pilot.pause()
 
-        assert isinstance(app.screen, TaskListScreen)
+        assert isinstance(app.screen, HomeScreen)
         tasks = app.task_service.list_tasks()
         assert len(tasks) == 1
         assert tasks[0].title == "Buy milk"
@@ -34,7 +34,7 @@ async def test_add_subtask_via_ui_appears_indented(tmp_path: Path) -> None:
         from cad_tui.domain.models import Task
 
         parent = app.task_service.add_task(Task(title="Plan trip"))
-        app.screen.refresh_tasks()
+        app.screen.refresh_all()
         await pilot.pause()
 
         await pilot.press("s")

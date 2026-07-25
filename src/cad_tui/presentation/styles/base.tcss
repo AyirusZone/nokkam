@@ -137,6 +137,10 @@ ListView {
     background: $background;
 }
 
+ListView:focus {
+    background: $foreground 4%;
+}
+
 ListItem {
     padding: 0 $space-sm;
 }
@@ -161,12 +165,20 @@ ListView > ListItem.-highlight {
     border-left: thick $foreground 12%;
 }
 
-/* ---------- Calendar ---------- */
+/* ---------- Home: calendar + tasks side by side ---------- */
+#home-body {
+    height: 1fr;
+}
+
 #calendar {
     width: 30;
-    height: auto;
+    height: 1fr;
     padding: 1 1;
     border-right: solid $panel;
+}
+
+#calendar:focus {
+    background: $foreground 4%;
 }
 
 #calendar-grid {
@@ -205,12 +217,22 @@ ListView > ListItem.-highlight {
 
 #day-pane {
     width: 1fr;
+    height: 1fr;
     padding: 0 2;
 }
 
-#day-title {
+#day-title, #all-tasks-title {
     padding: 1 0;
     color: $foreground 70%;
+}
+
+#day-tasks {
+    height: 9;
+    border-bottom: solid $panel;
+}
+
+#task-list {
+    height: 1fr;
 }
 
 /* ---------- Stats ---------- */

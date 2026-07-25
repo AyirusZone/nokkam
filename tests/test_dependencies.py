@@ -69,7 +69,7 @@ async def test_toggle_complete_on_blocked_task_is_refused_via_ui(tmp_path: Path)
         blocker = app.task_service.add_task(Task(title="Design"))
         blocked = app.task_service.add_task(Task(title="Build"))
         app.task_service.set_blocked_by(blocked.id, blocker.id)
-        app.screen.refresh_tasks()
+        app.screen.refresh_all()
         await pilot.pause()
 
         app.screen.select_task_by_id(blocked.id)
@@ -89,7 +89,7 @@ async def test_form_saves_blocked_by_and_paired_fields(tmp_path: Path) -> None:
     app = CadTuiApp(config=AppConfig(db_path=tmp_path / "ui2.db"))
     async with app.run_test() as pilot:
         app.task_service.add_task(Task(title="Design"))
-        app.screen.refresh_tasks()
+        app.screen.refresh_all()
         await pilot.pause()
 
         await pilot.press("a")

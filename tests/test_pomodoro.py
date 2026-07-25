@@ -4,8 +4,8 @@ from unittest.mock import patch
 from cad_tui.app import CadTuiApp
 from cad_tui.config import AppConfig
 from cad_tui.domain.models import Task
+from cad_tui.presentation.screens.home_screen import HomeScreen
 from cad_tui.presentation.screens.pomodoro_screen import BREAK_SECONDS, PomodoroScreen
-from cad_tui.presentation.screens.task_list import TaskListScreen
 
 
 def make_app(tmp_path: Path) -> CadTuiApp:
@@ -16,7 +16,7 @@ async def test_toggle_timer_via_ui(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
         task = app.task_service.add_task(Task(title="Focus work"))
-        app.screen.refresh_tasks()
+        app.screen.refresh_all()
         await pilot.pause()
 
         await pilot.press("t")
@@ -33,7 +33,7 @@ async def test_starting_timer_on_second_task_stops_first(tmp_path: Path) -> None
     async with app.run_test() as pilot:
         t1 = app.task_service.add_task(Task(title="A"))
         t2 = app.task_service.add_task(Task(title="B"))
-        app.screen.refresh_tasks()
+        app.screen.refresh_all()
         await pilot.pause()
 
         app.time_tracking.toggle(t1.id)
@@ -94,11 +94,11 @@ async def test_pomodoro_paused_does_not_tick(tmp_path: Path) -> None:
         assert screen.remaining == remaining_before
 
 
-async def test_pomodoro_close_returns_to_task_list(tmp_path: Path) -> None:
+async def test_pomodoro_close_returns_to_home(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
         await app.push_screen(PomodoroScreen())
         await pilot.pause()
         app.screen.action_close()
         await pilot.pause()
-        assert isinstance(app.screen, TaskListScreen)
+        assert isinstance(app.screen, HomeScreen)
