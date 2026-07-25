@@ -48,8 +48,8 @@ MIGRATIONS: list[tuple[int, str]] = [
             parent_task_id INTEGER REFERENCES task(id) ON DELETE CASCADE,
             recurrence_id INTEGER REFERENCES recurrence(id) ON DELETE SET NULL,
             reschedule_count INTEGER NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
             completed_at TEXT
         );
 
@@ -97,7 +97,7 @@ MIGRATIONS: list[tuple[int, str]] = [
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             action TEXT NOT NULL,
             target_id INTEGER,
-            ts TEXT NOT NULL DEFAULT (datetime('now'))
+            ts TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
         );
 
         CREATE INDEX idx_task_due_date ON task(due_date);

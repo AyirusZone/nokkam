@@ -75,3 +75,22 @@ def test_restore_reinserts_with_original_id_and_tags(tmp_path: Path) -> None:
     restored = repo.get(task_id)
     assert restored.title == "Deleted then restored"
     assert restored.tag_ids == tag_ids
+
+
+def test_completed_at_uses_local_date_not_utc(tmp_path: Path) -> None:
+    """Regression: SQLite's datetime('now') is UTC. Business logic (stats
+    streaks, "today" comparisons) uses Python's local date.today(). If the
+    repository ever stamps timestamps in UTC again, this drifts a full day
+    out of sync with local time for any positive UTC-offset timezone —
+    which is silent for ~22 hours a day and only visible right after local
+    midnight, which is exactly how this was first caught."""
+    from datetime import date
+
+    repo = make_repo(tmp_path / "data.db")
+    task_id = repo.create(Task(title="Local time check"))
+    repo.mark_done(task_id)
+    fetched = repo.get(task_id)
+
+    assert fetched.completed_at[:10] == date.today().isoformat()
+    assert fetched.created_at[:10] == date.today().isoformat()
+    assert fetched.updated_at[:10] == date.today().isoformat()

@@ -51,7 +51,7 @@ class TaskRepository:
             if fields:
                 set_clause = ", ".join(f"{k} = ?" for k in fields)
                 self.conn.execute(
-                    f"UPDATE task SET {set_clause}, updated_at = datetime('now') WHERE id = ?",
+                    f"UPDATE task SET {set_clause}, updated_at = datetime('now', 'localtime') WHERE id = ?",
                     (*fields.values(), task_id),
                 )
             if tag_ids is not None:
@@ -60,8 +60,8 @@ class TaskRepository:
     def mark_done(self, task_id: int) -> None:
         with self.conn:
             self.conn.execute(
-                "UPDATE task SET status = 'done', completed_at = datetime('now'), "
-                "updated_at = datetime('now') WHERE id = ?",
+                "UPDATE task SET status = 'done', completed_at = datetime('now', 'localtime'), "
+                "updated_at = datetime('now', 'localtime') WHERE id = ?",
                 (task_id,),
             )
 
@@ -69,7 +69,7 @@ class TaskRepository:
         with self.conn:
             self.conn.execute(
                 "UPDATE task SET status = 'open', completed_at = NULL, "
-                "updated_at = datetime('now') WHERE id = ?",
+                "updated_at = datetime('now', 'localtime') WHERE id = ?",
                 (task_id,),
             )
 

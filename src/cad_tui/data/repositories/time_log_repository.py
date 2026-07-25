@@ -10,7 +10,7 @@ class TimeLogRepository:
     def start(self, task_id: int) -> int:
         with self.conn:
             cur = self.conn.execute(
-                "INSERT INTO time_log (task_id, start_at) VALUES (?, datetime('now'))",
+                "INSERT INTO time_log (task_id, start_at) VALUES (?, datetime('now', 'localtime'))",
                 (task_id,),
             )
         return cur.lastrowid
@@ -18,7 +18,7 @@ class TimeLogRepository:
     def stop(self, time_log_id: int) -> None:
         with self.conn:
             self.conn.execute(
-                "UPDATE time_log SET end_at = datetime('now') WHERE id = ?", (time_log_id,)
+                "UPDATE time_log SET end_at = datetime('now', 'localtime') WHERE id = ?", (time_log_id,)
             )
 
     def active_for_task(self, task_id: int) -> int | None:
@@ -30,7 +30,7 @@ class TimeLogRepository:
     def total_minutes_for_task(self, task_id: int) -> int:
         row = self.conn.execute(
             """SELECT COALESCE(SUM(
-                   (julianday(COALESCE(end_at, datetime('now'))) - julianday(start_at)) * 24 * 60
+                   (julianday(COALESCE(end_at, datetime('now', 'localtime'))) - julianday(start_at)) * 24 * 60
                ), 0) AS minutes
                FROM time_log WHERE task_id = ?""",
             (task_id,),

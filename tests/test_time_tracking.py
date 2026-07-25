@@ -55,3 +55,19 @@ def test_total_minutes_zero_for_untracked_task(tmp_path: Path) -> None:
     service, task_repo = make_service(tmp_path / "data.db")
     task_id = task_repo.create(Task(title="Untouched"))
     assert service.total_minutes(task_id) == 0
+
+
+def test_start_at_uses_local_date_not_utc(tmp_path: Path) -> None:
+    """Same UTC-vs-local class of bug as task.completed_at — see
+    test_task_repository.test_completed_at_uses_local_date_not_utc."""
+    from datetime import date
+
+    service, task_repo = make_service(tmp_path / "data.db")
+    task_id = task_repo.create(Task(title="Focus work"))
+    service.toggle(task_id)
+
+    conn = service.repo.conn
+    row = conn.execute(
+        "SELECT start_at FROM time_log WHERE task_id = ?", (task_id,)
+    ).fetchone()
+    assert row["start_at"][:10] == date.today().isoformat()
