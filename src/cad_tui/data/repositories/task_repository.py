@@ -77,6 +77,12 @@ class TaskRepository:
         with self.conn:
             self.conn.execute("DELETE FROM task WHERE id = ?", (task_id,))
 
+    def count_by_recurrence(self, recurrence_id: int) -> int:
+        row = self.conn.execute(
+            "SELECT COUNT(*) AS c FROM task WHERE recurrence_id = ?", (recurrence_id,)
+        ).fetchone()
+        return row["c"]
+
     def restore(self, task: Task) -> int:
         """Re-insert a previously deleted task with its original id and tags (undo)."""
         with self.conn:

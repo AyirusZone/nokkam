@@ -12,6 +12,7 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, ListView, Static
 
 from cad_tui.domain.models import Task
+from cad_tui.domain.recurrence import RecurrenceRule
 from cad_tui.presentation.screens.help import HelpModal
 from cad_tui.presentation.screens.task_form import TaskFormModal, TaskFormResult
 from cad_tui.presentation.screens.task_list import TaskRow
@@ -133,6 +134,11 @@ class CalendarScreen(Screen):
                     else None
                 ),
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
+                recurrence_id=(
+                    self.app.recurrence_repo.create(RecurrenceRule(rule=result.recurrence))
+                    if result.recurrence
+                    else None
+                ),
             )
             self.app.task_service.add_task(task)
             self.refresh_all()

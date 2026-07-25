@@ -10,6 +10,7 @@ from cad_tui.config import AppConfig, load_config
 from cad_tui.data.db import connect
 from cad_tui.data.migrations import apply_migrations
 from cad_tui.data.repositories.project_repository import ProjectRepository
+from cad_tui.data.repositories.recurrence_repository import RecurrenceRepository
 from cad_tui.data.repositories.tag_repository import TagRepository
 from cad_tui.data.repositories.task_repository import TaskRepository
 from cad_tui.presentation.screens.task_list import TaskListScreen
@@ -41,8 +42,9 @@ class CadTuiApp(App):
         self.task_repo = TaskRepository(self.db)
         self.project_repo = ProjectRepository(self.db)
         self.tag_repo = TagRepository(self.db)
+        self.recurrence_repo = RecurrenceRepository(self.db)
         self.undo_stack = UndoStack()
-        self.task_service = TaskService(self.task_repo, self.undo_stack)
+        self.task_service = TaskService(self.task_repo, self.undo_stack, self.recurrence_repo)
 
         self.push_screen(TaskListScreen())
 

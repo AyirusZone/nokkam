@@ -13,6 +13,12 @@ from textual.widgets import Button, Input, Label, Select, Static
 from cad_tui.domain.models import Priority, Task
 
 PRIORITY_OPTIONS = [("High", Priority.HIGH), ("Medium", Priority.MEDIUM), ("Low", Priority.LOW)]
+RECURRENCE_OPTIONS = [
+    ("None", ""),
+    ("Daily", "daily"),
+    ("Weekly", "weekly"),
+    ("Monthly", "monthly"),
+]
 
 
 @dataclass
@@ -24,6 +30,7 @@ class TaskFormResult:
     due_time: str | None
     project_name: str | None
     tag_names: list[str]
+    recurrence: str
 
 
 class TaskFormModal(ModalScreen[TaskFormResult | None]):
@@ -35,18 +42,25 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         project_name: str = "",
         tag_names: str = "",
         default_due_date: str = "",
+        recurrence: str = "",
+        parent_title: str = "",
     ) -> None:
         super().__init__()
         self.editing = task
         self._project_name = project_name
         self._tag_names = tag_names
         self._default_due_date = default_due_date
+        self._recurrence = recurrence
+        self._parent_title = parent_title
 
     def compose(self) -> ComposeResult:
         t = self.editing
         due_date_value = (t.due_date or "") if t else self._default_due_date
+        heading = "Edit task" if t else ("Add subtask" if self._parent_title else "Add task")
         with Vertical(classes="panel", id="task-form"):
-            yield Static("Edit task" if t else "Add task", classes="accent-text")
+            yield Static(heading, classes="accent-text")
+            if self._parent_title:
+                yield Static(f"[dim]under: {self._parent_title}[/]")
             yield Label("Title")
             yield Input(value=t.title if t else "", id="title", placeholder="Task title")
             yield Label("Notes")
@@ -66,6 +80,8 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
             yield Input(value=self._project_name, id="project", placeholder="Optional project")
             yield Label("Tags (comma separated)")
             yield Input(value=self._tag_names, id="tags", placeholder="home, urgent")
+            yield Label("Repeats")
+            yield Select(RECURRENCE_OPTIONS, value=self._recurrence, id="recurrence", allow_blank=False)
             with Horizontal():
                 yield Button("Save", variant="primary", id="save")
                 yield Button("Cancel", id="cancel")
@@ -85,6 +101,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         due_time = self.query_one("#due_time", Input).value.strip() or None
         project_name = self.query_one("#project", Input).value.strip() or None
         tag_names = [t for t in self.query_one("#tags", Input).value.split(",") if t.strip()]
+        recurrence = self.query_one("#recurrence", Select).value
 
         self.dismiss(
             TaskFormResult(
@@ -95,6 +112,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
                 due_time=due_time,
                 project_name=project_name,
                 tag_names=tag_names,
+                recurrence=recurrence,
             )
         )
 

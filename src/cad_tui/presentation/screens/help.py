@@ -17,6 +17,8 @@ HELP_TEXT = """\
   k / up     move up
   u          undo last action
   c          open calendar
+  s          add subtask under selected
+  A          quick add (free text, e.g. "Buy milk tmrw 3pm")
 
 [bold]Calendar[/]
   h/j/k/l    move day / week
