@@ -56,8 +56,8 @@ TaskFormModal, HelpModal {
 
 #help-panel {
     width: 50;
-    height: auto;
-    padding: $space-md;
+    max-height: 90%;
+    padding: 1 2;
 }
 
 ListView {
@@ -75,4 +75,56 @@ ListItem:hover {
 ListView > ListItem.-highlight {
     background: $surface;
     border-left: thick $accent;
+}
+
+/* Calendar */
+#calendar {
+    width: 30;
+    height: auto;
+    padding: 1 1;
+    border-right: solid $panel;
+}
+
+#calendar-grid {
+    grid-size: 7;
+    grid-gutter: 0 1;
+    width: 28;
+    height: auto;
+}
+
+.weekday-label {
+    color: $foreground 50%;
+    text-align: center;
+    text-style: bold;
+    height: 1;
+}
+
+.day-cell {
+    text-align: center;
+    height: 1;
+    color: $foreground;
+}
+
+.day-cell.other-month {
+    color: $foreground 30%;
+}
+
+.day-cell.today {
+    text-style: bold;
+    color: $accent;
+}
+
+.day-cell.selected {
+    background: $accent;
+    color: $background;
+    text-style: bold;
+}
+
+#day-pane {
+    width: 1fr;
+    padding: 0 2;
+}
+
+#day-title {
+    padding: 1 0;
 }

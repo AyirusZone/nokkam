@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Static
 
 HELP_TEXT = """\
 [bold accent]cad-tui — keybindings[/]
 
+[bold]Task list[/]
   a          add task
   e          edit selected task
   d          delete selected task
@@ -15,6 +16,16 @@ HELP_TEXT = """\
   j / down   move down
   k / up     move up
   u          undo last action
+  c          open calendar
+
+[bold]Calendar[/]
+  h/j/k/l    move day / week
+  [[ / ]]    prev / next month
+  t          jump to today
+  a d space  add / delete / toggle (selected day)
+  esc        back to task list
+
+[bold]Global[/]
   ctrl+t     toggle theme
   ?          this help
   q          quit
@@ -26,7 +37,7 @@ class HelpModal(ModalScreen[None]):
     BINDINGS = [("escape", "close_help", "Close"), ("question_mark", "close_help", "Close")]
 
     def compose(self) -> ComposeResult:
-        with Vertical(classes="panel", id="help-panel"):
+        with VerticalScroll(classes="panel", id="help-panel"):
             yield Static(HELP_TEXT)
 
     def action_close_help(self) -> None:

@@ -41,6 +41,7 @@ class TaskListScreen(Screen):
         Binding("u", "undo", "Undo"),
         Binding("j", "cursor_down", "Down", show=False),
         Binding("k", "cursor_up", "Up", show=False),
+        Binding("c", "open_calendar", "Calendar"),
         Binding("question_mark", "show_help", "Help"),
     ]
 
@@ -151,6 +152,11 @@ class TaskListScreen(Screen):
 
     def action_show_help(self) -> None:
         self.app.push_screen(HelpModal())
+
+    def action_open_calendar(self) -> None:
+        from cad_tui.presentation.screens.calendar_screen import CalendarScreen
+
+        self.app.push_screen(CalendarScreen())
 
     def _resolve_project(self, name: str | None) -> int | None:
         if not name:

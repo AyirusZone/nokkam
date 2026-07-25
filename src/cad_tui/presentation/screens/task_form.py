@@ -34,14 +34,17 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         task: Task | None = None,
         project_name: str = "",
         tag_names: str = "",
+        default_due_date: str = "",
     ) -> None:
         super().__init__()
         self.editing = task
         self._project_name = project_name
         self._tag_names = tag_names
+        self._default_due_date = default_due_date
 
     def compose(self) -> ComposeResult:
         t = self.editing
+        due_date_value = (t.due_date or "") if t else self._default_due_date
         with Vertical(classes="panel", id="task-form"):
             yield Static("Edit task" if t else "Add task", classes="accent-text")
             yield Label("Title")
@@ -56,7 +59,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
                 allow_blank=False,
             )
             yield Label("Due date (YYYY-MM-DD)")
-            yield Input(value=(t.due_date or "") if t else "", id="due_date", placeholder="2026-08-01")
+            yield Input(value=due_date_value, id="due_date", placeholder="2026-08-01")
             yield Label("Due time (HH:MM)")
             yield Input(value=(t.due_time or "") if t else "", id="due_time", placeholder="14:30")
             yield Label("Project")
