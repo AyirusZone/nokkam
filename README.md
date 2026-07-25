@@ -20,22 +20,34 @@ single SQLite file, nothing leaves your machine.
 - **Time tracking** — start/stop a timer per task; **Pomodoro** — 25/5 focus
   timer
 - **Stats** — completion rate, streak, GitHub-style contribution heatmap
-- **Reminders** — due-soon desktop notifications (macOS/Linux), deduplicated
+- **Reminders** — due-soon desktop notifications (macOS, Linux, Windows), deduplicated
 - **Import/export** — JSON, CSV, and ICS (calendar interop)
 - **CLI quick-capture** — add a task from your shell without opening the UI
 - Light/dark theme with a single configurable accent color
 
 ## Install
 
-Requires Python 3.11+.
+Requires Python 3.11+. Runs anywhere Textual does — macOS, Linux, and Windows
+(Windows Terminal recommended for full color/glyph support).
+
+**From PyPI** (once published):
 
 ```bash
-git clone git@github.com:AyirusZone/cad-tui.git
-cd cad-tui
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+pipx install cad-tui   # or: pip install cad-tui
 ```
+
+**From source:**
+
+```bash
+git clone git@github.com:AyirusZone/cad_tui.git
+cd cad_tui
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install .
+```
+
+The only runtime dependency is [Textual](https://github.com/Textualize/textual)
+— no C extensions, nothing else to compile.
 
 ## Usage
 
@@ -139,3 +151,7 @@ pytest
 The app is layered (`presentation` → `services` → `domain` → `data`/`infra`)
 so business logic stays independent of the Textual UI. See commit history
 for the phase-by-phase build log.
+
+## License
+
+[MIT](LICENSE)
