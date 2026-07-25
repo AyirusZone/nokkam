@@ -4,6 +4,7 @@ from pathlib import Path
 from cad_tui.app import CadTuiApp
 from cad_tui.config import AppConfig
 from cad_tui.domain.models import Task
+from cad_tui.presentation.widgets.app_header import AppHeader
 
 
 def make_app(tmp_path: Path) -> CadTuiApp:
@@ -23,7 +24,7 @@ async def test_smart_list_today(tmp_path: Path) -> None:
 
         titles = [i.model.title for i in app.screen.list_view.children]
         assert titles == ["Today task"]
-        assert app.sub_title == "Today"
+        assert app.screen.query_one(AppHeader).meta == "Today"
 
 
 async def test_smart_list_overdue(tmp_path: Path) -> None:
@@ -80,4 +81,4 @@ async def test_clearing_smart_filter_restores_full_tree(tmp_path: Path) -> None:
 
         titles = [i.model.title for i in app.screen.list_view.children]
         assert titles == ["Task A"]
-        assert app.sub_title == ""
+        assert app.screen.query_one(AppHeader).meta == "1 open"

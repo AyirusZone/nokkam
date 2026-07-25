@@ -9,6 +9,8 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+DEFAULT_ACCENT = "#FF6B4A"  # signature warm vermillion — see presentation/theme.py
+
 
 def default_app_dir() -> Path:
     return Path.home() / ".cad-tui"
@@ -17,7 +19,7 @@ def default_app_dir() -> Path:
 @dataclass
 class AppConfig:
     theme: str = "cad-dark"
-    accent: str = "#0A84FF"  # Apple system blue as the single accent seed
+    accent: str = DEFAULT_ACCENT
     db_path: Path = field(default_factory=lambda: default_app_dir() / "data.db")
     app_dir: Path = field(default_factory=default_app_dir)
 
@@ -33,7 +35,7 @@ def load_config(config_path: Path | None = None) -> AppConfig:
     app_dir = default_app_dir()
     return AppConfig(
         theme=raw.get("theme", "cad-dark"),
-        accent=raw.get("accent", "#0A84FF"),
+        accent=raw.get("accent", DEFAULT_ACCENT),
         db_path=Path(raw["db_path"]).expanduser() if "db_path" in raw else app_dir / "data.db",
         app_dir=app_dir,
     )

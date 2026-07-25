@@ -9,13 +9,14 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, Header, ListView, Static
+from textual.widgets import Footer, ListView, Static
 
 from cad_tui.domain.models import Task
 from cad_tui.domain.recurrence import RecurrenceRule
 from cad_tui.presentation.screens.help import HelpModal
 from cad_tui.presentation.screens.task_form import TaskFormModal, TaskFormResult
 from cad_tui.presentation.screens.task_list import TaskRow
+from cad_tui.presentation.widgets.app_header import AppHeader
 from cad_tui.presentation.widgets.calendar_grid import CalendarGrid, DayCell
 
 
@@ -37,7 +38,7 @@ class CalendarScreen(Screen):
     ]
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield AppHeader(subtitle="calendar")
         with Horizontal():
             yield CalendarGrid(id="calendar")
             with Vertical(id="day-pane"):
@@ -65,6 +66,7 @@ class CalendarScreen(Screen):
         self.calendar.counts = self._month_counts(fd.year, fd.month)
         self.calendar.render_month()
         self._refresh_day_tasks()
+        self.query_one(AppHeader).set_meta(fd.strftime("%B %Y"))
 
     def _month_counts(self, year: int, month: int) -> dict[str, int]:
         counts: dict[str, int] = {}

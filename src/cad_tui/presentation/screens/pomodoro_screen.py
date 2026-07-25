@@ -54,7 +54,7 @@ class PomodoroScreen(ModalScreen[None]):
         phase = "Break" if self.on_break else "Focus"
         state = "Paused" if self.paused else "Running"
         self.query_one("#pomodoro-display", Static).update(
-            f"[bold accent]{phase}[/]\n\n"
+            f"[bold $accent]{phase}[/]\n\n"
             f"{minutes:02d}:{seconds:02d}\n\n"
             f"[dim]{state} — space pause/resume, r reset, esc close[/]"
         )

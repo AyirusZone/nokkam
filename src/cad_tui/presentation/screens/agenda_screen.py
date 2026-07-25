@@ -7,11 +7,12 @@ from datetime import date, timedelta
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Footer, Header, ListView, Static
+from textual.widgets import Footer, ListView
 
 from cad_tui.domain.models import Status
 from cad_tui.presentation.screens.help import HelpModal
 from cad_tui.presentation.screens.task_list import TaskRow
+from cad_tui.presentation.widgets.app_header import AppHeader
 
 AGENDA_DAYS = 14
 
@@ -28,8 +29,7 @@ class AgendaScreen(Screen):
     ]
 
     def compose(self) -> ComposeResult:
-        yield Header()
-        yield Static(f"Agenda — next {AGENDA_DAYS} days", classes="accent-text", id="agenda-title")
+        yield AppHeader(subtitle="agenda", meta=f"next {AGENDA_DAYS} days")
         yield ListView(id="agenda-list")
         yield Footer()
 

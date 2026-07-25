@@ -6,7 +6,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Static
 
 HELP_TEXT = """\
-[bold accent]cad-tui — keybindings[/]
+[bold $accent]cad — keybindings[/]
 
 [bold]Task list[/]
   a          add task

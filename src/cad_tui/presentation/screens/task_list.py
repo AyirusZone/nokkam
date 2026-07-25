@@ -7,38 +7,46 @@ from datetime import date, timedelta
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Footer, Header, ListItem, ListView, Static
+from textual.widgets import Footer, ListItem, ListView, Static
 
 from cad_tui.domain.models import Priority, Status, Task
 from cad_tui.domain.recurrence import RecurrenceRule
 from cad_tui.presentation.screens.help import HelpModal
 from cad_tui.presentation.screens.quick_add import QuickAddModal
 from cad_tui.presentation.screens.task_form import TaskFormModal, TaskFormResult
+from cad_tui.presentation.widgets.app_header import AppHeader
 
-PRIORITY_ICON = {Priority.HIGH: "●", Priority.MEDIUM: "◐", Priority.LOW: "○"}
+PRIORITY_CLASS = {
+    Priority.HIGH: "priority-high",
+    Priority.MEDIUM: "priority-medium",
+    Priority.LOW: "priority-low",
+}
 
 
 class TaskRow(ListItem):
     def __init__(self, task: Task, depth: int = 0) -> None:
-        super().__init__()
+        super().__init__(classes=PRIORITY_CLASS.get(task.priority, "priority-medium"))
         self.model = task
         self.depth = depth
 
     def compose(self) -> ComposeResult:
         done = self.model.status == Status.DONE
-        check = "x" if done else " "
-        icon = PRIORITY_ICON.get(self.model.priority, "◐")
         indent = "  " * self.depth
-        recurring = " ↻" if self.model.recurrence_id else ""
-        timing = " [accent]⏱[/]" if self.app.time_tracking.active_task_id == self.model.id else ""
-        blocked = " [warning]⛔[/]" if not done and self.app.task_service.is_blocked(self.model.id) else ""
+        check = "[$success]✓[/] " if done else "  "
+        recurring = " [$secondary]↻[/]" if self.model.recurrence_id else ""
+        timing = " [$accent]⏱[/]" if self.app.time_tracking.active_task_id == self.model.id else ""
+        blocked = (
+            " [$warning]⛔[/]"
+            if not done and self.app.task_service.is_blocked(self.model.id)
+            else ""
+        )
         due = ""
         if self.model.due_date:
-            due = f"  [dim]{self.model.due_date} {self.model.due_time or ''}[/]".rstrip()
+            due = f"   [dim]{self.model.due_date} {self.model.due_time or ''}[/]".rstrip()
         title = self.model.title
         if done:
             title = f"[dim strike]{title}[/]"
-        yield Static(f"{indent}[{check}] {icon}  {title}{recurring}{timing}{blocked}{due}")
+        yield Static(f"{indent}{check}{title}{recurring}{timing}{blocked}{due}")
 
 
 class TaskListScreen(Screen):
@@ -71,7 +79,7 @@ class TaskListScreen(Screen):
         self.smart_filter: str | None = None
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield AppHeader(subtitle="tasks")
         yield ListView(id="task-list")
         yield Footer()
 
@@ -84,7 +92,6 @@ class TaskListScreen(Screen):
 
     def set_smart_filter(self, filter_name: str | None) -> None:
         self.smart_filter = filter_name
-        self.app.sub_title = self.SMART_LIST_LABELS.get(filter_name, "")
         self.refresh_tasks()
 
     def refresh_tasks(self, select_index: int | None = None) -> None:
@@ -99,6 +106,10 @@ class TaskListScreen(Screen):
         if rows:
             index = 0 if select_index is None else max(0, min(select_index, len(rows) - 1))
             list_view.index = index
+
+        open_count = len(self.app.task_service.list_tasks(status=Status.OPEN))
+        meta = self.SMART_LIST_LABELS.get(self.smart_filter, f"{open_count} open")
+        self.query_one(AppHeader).set_meta(meta)
 
     def _smart_list_tasks(self) -> list[Task]:
         today_iso = date.today().isoformat()

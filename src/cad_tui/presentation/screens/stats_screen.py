@@ -5,8 +5,9 @@ from datetime import date, timedelta
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Footer, Header, Static
+from textual.widgets import Footer, Static
 
+from cad_tui.presentation.widgets.app_header import AppHeader
 from cad_tui.services.stats_service import (
     HEATMAP_WEEKDAY_LABELS,
     HEATMAP_WEEKS,
@@ -22,7 +23,7 @@ class StatsScreen(Screen):
     BINDINGS = [Binding("escape,backspace", "back", "Back")]
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield AppHeader(subtitle="stats")
         yield Static("", id="stats-body", classes="panel")
         yield Footer()
 
@@ -39,13 +40,12 @@ class StatsScreen(Screen):
         )
 
         body = (
-            "[bold accent]Stats[/]\n\n"
-            f"Open tasks       {stats.open}\n"
-            f"Done tasks       {stats.done}\n"
-            f"Overdue          {stats.overdue}\n"
-            f"Completion       {bar} {stats.completion_rate:.0%}\n"
-            f"Current streak   {stats.streak_days} day(s)\n\n"
-            f"[bold]Last {HEATMAP_WEEKS} weeks[/]\n"
+            f"[dim]open tasks[/]       {stats.open}\n"
+            f"[dim]done tasks[/]       {stats.done}\n"
+            f"[dim]overdue[/]          {stats.overdue}\n"
+            f"[dim]completion[/]       {bar} {stats.completion_rate:.0%}\n"
+            f"[dim]current streak[/]   {stats.streak_days} day(s)\n\n"
+            f"[dim]last {HEATMAP_WEEKS} weeks[/]\n"
             f"{heatmap_block}\n"
         )
         self.query_one("#stats-body", Static).update(body)

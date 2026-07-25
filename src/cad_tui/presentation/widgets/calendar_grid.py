@@ -11,7 +11,7 @@ from textual.message import Message
 from textual.widget import Widget
 from textual.widgets import Static
 
-WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+WEEKDAY_LABELS = ["mo", "tu", "we", "th", "fr", "sa", "su"]
 
 
 class DayCell(Static):

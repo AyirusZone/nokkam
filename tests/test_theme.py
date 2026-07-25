@@ -1,3 +1,4 @@
+from cad_tui.config import DEFAULT_ACCENT
 from cad_tui.presentation.theme import build_themes
 
 
@@ -12,7 +13,7 @@ def test_custom_accent_applied_to_both_themes() -> None:
 
 def test_default_accent_used_when_not_specified() -> None:
     themes = build_themes()
-    assert all(t.primary == "#0A84FF" for t in themes)
+    assert all(t.primary == DEFAULT_ACCENT for t in themes)
 
 
 def test_themes_have_distinct_dark_flag() -> None:

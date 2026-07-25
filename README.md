@@ -123,7 +123,7 @@ Optional — `~/.cad-tui/config.toml`:
 
 ```toml
 theme = "cad-dark"       # or "cad-light"
-accent = "#0A84FF"       # any hex color; drives both themes' accent
+accent = "#FF6B4A"       # any hex color; drives both themes' accent
 db_path = "~/.cad-tui/data.db"
 ```
 

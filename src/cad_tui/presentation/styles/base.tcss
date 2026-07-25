@@ -1,8 +1,10 @@
-/* Design tokens: spacing scale adapted from Apple HIG's 4/8/12/16/24px
-   scale to terminal cell units (a cell has no fractional size). Color
-   roles ($primary, $surface, $panel, ...) come from the registered
-   cad-dark / cad-light Theme (see presentation/theme.py) — do not
-   hardcode colors here. */
+/* Design tokens. Spacing is the primary structuring device — chrome
+   (borders/boxes) is spent sparingly, only where it signals a real
+   elevation change (a modal floating over content). In-flow content
+   stays flat against $background; hierarchy comes from spacing,
+   typographic weight, and one accent color used with restraint.
+   Color roles ($primary, $surface, $panel, $accent, ...) come from the
+   registered cad-dark / cad-light Theme — see presentation/theme.py. */
 $space-xs: 1;
 $space-sm: 2;
 $space-md: 3;
@@ -14,8 +16,8 @@ Screen {
 }
 
 .panel {
-    background: $surface;
-    border: round $panel;
+    background: $panel;
+    border: round $foreground 10%;
     padding: $space-sm $space-md;
 }
 
@@ -32,9 +34,35 @@ Screen {
     text-style: bold;
 }
 
-TaskFormModal, HelpModal, QuickAddModal {
+/* ---------- Header ---------- */
+AppHeader {
+    dock: top;
+    height: 2;
+    padding: 0 2;
+    background: $background;
+    border-bottom: solid $panel;
+}
+
+#app-header-title {
+    width: auto;
+}
+
+#app-header-meta {
+    width: 1fr;
+    text-align: right;
+    color: $foreground 45%;
+}
+
+Footer {
+    height: 2;
+    background: $background;
+    border-top: solid $panel;
+}
+
+/* ---------- Modals ---------- */
+TaskFormModal, HelpModal, QuickAddModal, PomodoroScreen {
     align: center middle;
-    background: $background 60%;
+    background: $background 70%;
 }
 
 #task-form {
@@ -45,13 +73,13 @@ TaskFormModal, HelpModal, QuickAddModal {
 }
 
 #task-form Label {
-    color: $foreground 70%;
+    color: $foreground 55%;
 }
 
 #task-form Input, #task-form Select {
     height: 1;
     border: none;
-    background: $panel;
+    background: $surface;
 }
 
 #task-form .field-row {
@@ -77,10 +105,34 @@ TaskFormModal, HelpModal, QuickAddModal {
 
 #quick-add Input {
     border: none;
-    background: $panel;
+    background: $surface;
     height: 1;
 }
 
+Button {
+    border: none;
+    height: 1;
+    min-width: 10;
+    background: $surface;
+    color: $foreground;
+    text-style: none;
+}
+
+Button:hover {
+    background: $foreground 10%;
+}
+
+#save {
+    background: $accent;
+    color: $background;
+    text-style: bold;
+}
+
+#save:hover {
+    background: $accent 85%;
+}
+
+/* ---------- Task list ---------- */
 ListView {
     background: $background;
 }
@@ -90,15 +142,26 @@ ListItem {
 }
 
 ListItem:hover {
-    background: $panel;
+    background: $foreground 5%;
 }
 
 ListView > ListItem.-highlight {
-    background: $surface;
-    border-left: thick $accent;
+    background: $accent 12%;
 }
 
-/* Calendar */
+.priority-high {
+    border-left: thick $error;
+}
+
+.priority-medium {
+    border-left: thick $warning 55%;
+}
+
+.priority-low {
+    border-left: thick $foreground 12%;
+}
+
+/* ---------- Calendar ---------- */
 #calendar {
     width: 30;
     height: auto;
@@ -109,25 +172,24 @@ ListView > ListItem.-highlight {
 #calendar-grid {
     grid-size: 7;
     grid-gutter: 0 1;
-    width: 28;
+    width: 27;
     height: auto;
 }
 
 .weekday-label {
-    color: $foreground 50%;
+    color: $foreground 40%;
     text-align: center;
-    text-style: bold;
     height: 1;
 }
 
 .day-cell {
     text-align: center;
     height: 1;
-    color: $foreground;
+    color: $foreground 80%;
 }
 
 .day-cell.other-month {
-    color: $foreground 30%;
+    color: $foreground 22%;
 }
 
 .day-cell.today {
@@ -136,8 +198,8 @@ ListView > ListItem.-highlight {
 }
 
 .day-cell.selected {
-    background: $accent;
-    color: $background;
+    background: $accent 25%;
+    color: $accent;
     text-style: bold;
 }
 
@@ -148,25 +210,17 @@ ListView > ListItem.-highlight {
 
 #day-title {
     padding: 1 0;
+    color: $foreground 70%;
 }
 
-/* Agenda / Stats */
-#agenda-title {
-    padding: 1 2;
-}
-
+/* ---------- Stats ---------- */
 #stats-body {
     width: 50;
     margin: 1 2;
     padding: 1 2;
 }
 
-/* Pomodoro */
-PomodoroScreen {
-    align: center middle;
-    background: $background 60%;
-}
-
+/* ---------- Pomodoro ---------- */
 #pomodoro-panel {
     width: 40;
     height: auto;
