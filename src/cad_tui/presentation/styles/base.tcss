@@ -1,0 +1,33 @@
+/* Design tokens: spacing scale adapted from Apple HIG's 4/8/12/16/24px
+   scale to terminal cell units (a cell has no fractional size). Color
+   roles ($primary, $surface, $panel, ...) come from the registered
+   cad-dark / cad-light Theme (see presentation/theme.py) — do not
+   hardcode colors here. */
+$space-xs: 1;
+$space-sm: 2;
+$space-md: 3;
+$space-lg: 4;
+
+Screen {
+    background: $background;
+    color: $foreground;
+}
+
+.panel {
+    background: $surface;
+    border: round $panel;
+    padding: $space-sm $space-md;
+}
+
+.panel:focus-within {
+    border: round $accent;
+}
+
+.muted {
+    color: $foreground 60%;
+}
+
+.accent-text {
+    color: $accent;
+    text-style: bold;
+}

@@ -1,0 +1,30 @@
+[project]
+name = "cad-tui"
+version = "0.1.0"
+description = "A calcurse-inspired TUI for tasks and calendar, styled with Material/Apple design tokens."
+requires-python = ">=3.11"
+dependencies = [
+    "textual>=8.0",
+    "rich>=13.0",
+]
+
+[project.scripts]
+cad-tui = "cad_tui.app:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-textual-snapshot>=1.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
