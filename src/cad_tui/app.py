@@ -16,10 +16,12 @@ from cad_tui.data.repositories.project_repository import ProjectRepository
 from cad_tui.data.repositories.recurrence_repository import RecurrenceRepository
 from cad_tui.data.repositories.tag_repository import TagRepository
 from cad_tui.data.repositories.task_repository import TaskRepository
+from cad_tui.data.repositories.time_log_repository import TimeLogRepository
 from cad_tui.presentation.command_provider import TaskSearchProvider
 from cad_tui.presentation.screens.task_list import TaskListScreen
 from cad_tui.presentation.theme import THEMES
 from cad_tui.services.task_service import TaskService
+from cad_tui.services.time_tracking_service import TimeTrackingService
 from cad_tui.services.undo import UndoStack
 
 
@@ -51,6 +53,8 @@ class CadTuiApp(App):
         self.recurrence_repo = RecurrenceRepository(self.db)
         self.undo_stack = UndoStack()
         self.task_service = TaskService(self.task_repo, self.undo_stack, self.recurrence_repo)
+        self.time_log_repo = TimeLogRepository(self.db)
+        self.time_tracking = TimeTrackingService(self.time_log_repo)
 
         self.push_screen(TaskListScreen())
 
@@ -60,6 +64,15 @@ class CadTuiApp(App):
 
     def action_toggle_theme(self) -> None:
         self.theme = "cad-light" if self.theme == "cad-dark" else "cad-dark"
+
+    def notify_desktop(self, message: str, title: str = "cad-tui") -> None:
+        """OS-level desktop notification. Implemented in Phase 5b; no-op until then."""
+
+    def action_open_pomodoro(self) -> None:
+        self._goto_task_list()
+        from cad_tui.presentation.screens.pomodoro_screen import PomodoroScreen
+
+        self.push_screen(PomodoroScreen())
 
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         yield from super().get_system_commands(screen)
@@ -74,6 +87,9 @@ class CadTuiApp(App):
         )
         yield SystemCommand(
             "Show stats", "Completion rate and streak", self._cmd_open_stats
+        )
+        yield SystemCommand(
+            "Pomodoro", "Start a 25/5 focus timer", self.action_open_pomodoro
         )
         yield SystemCommand(
             "Smart list: Today", "Show only tasks due today", lambda: self._cmd_smart_list("today")

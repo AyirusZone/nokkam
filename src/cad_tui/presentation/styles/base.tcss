@@ -151,3 +151,16 @@ ListView > ListItem.-highlight {
     margin: 1 2;
     padding: 1 2;
 }
+
+/* Pomodoro */
+PomodoroScreen {
+    align: center middle;
+    background: $background 60%;
+}
+
+#pomodoro-panel {
+    width: 40;
+    height: auto;
+    padding: 1 2;
+    text-align: center;
+}

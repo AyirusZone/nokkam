@@ -30,13 +30,14 @@ class TaskRow(ListItem):
         icon = PRIORITY_ICON.get(self.model.priority, "◐")
         indent = "  " * self.depth
         recurring = " ↻" if self.model.recurrence_id else ""
+        timing = " [accent]⏱[/]" if self.app.time_tracking.active_task_id == self.model.id else ""
         due = ""
         if self.model.due_date:
             due = f"  [dim]{self.model.due_date} {self.model.due_time or ''}[/]".rstrip()
         title = self.model.title
         if done:
             title = f"[dim strike]{title}[/]"
-        yield Static(f"{indent}[{check}] {icon}  {title}{recurring}{due}")
+        yield Static(f"{indent}[{check}] {icon}  {title}{recurring}{timing}{due}")
 
 
 class TaskListScreen(Screen):
@@ -53,6 +54,8 @@ class TaskListScreen(Screen):
         Binding("A", "quick_add", "Quick add"),
         Binding("w", "open_agenda", "Agenda"),
         Binding("S", "open_stats", "Stats"),
+        Binding("t", "toggle_timer", "Timer"),
+        Binding("P", "open_pomodoro", "Pomodoro"),
         Binding("question_mark", "show_help", "Help"),
     ]
 
@@ -255,6 +258,18 @@ class TaskListScreen(Screen):
         from cad_tui.presentation.screens.stats_screen import StatsScreen
 
         self.app.push_screen(StatsScreen())
+
+    def action_toggle_timer(self) -> None:
+        task = self.selected_task
+        if task is None:
+            return
+        index = self.list_view.index
+        running = self.app.time_tracking.toggle(task.id)
+        self.refresh_tasks(select_index=index)
+        self.notify(f"Timer {'started' if running else 'stopped'}: {task.title}")
+
+    def action_open_pomodoro(self) -> None:
+        self.app.action_open_pomodoro()
 
     def _resolve_project(self, name: str | None) -> int | None:
         if not name:

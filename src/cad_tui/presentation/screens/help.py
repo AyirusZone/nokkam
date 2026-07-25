@@ -21,6 +21,8 @@ HELP_TEXT = """\
   A          quick add (free text, e.g. "Buy milk tmrw 3pm")
   w          open agenda (next 14 days)
   S          open stats
+  t          start/stop timer on selected task
+  P          open Pomodoro (25/5 focus timer)
 
 [bold]Calendar[/]
   h/j/k/l    move day / week
