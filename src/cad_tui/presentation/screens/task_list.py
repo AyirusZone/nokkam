@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
@@ -49,8 +51,20 @@ class TaskListScreen(Screen):
         Binding("c", "open_calendar", "Calendar"),
         Binding("s", "add_subtask", "Subtask"),
         Binding("A", "quick_add", "Quick add"),
+        Binding("w", "open_agenda", "Agenda"),
+        Binding("S", "open_stats", "Stats"),
         Binding("question_mark", "show_help", "Help"),
     ]
+
+    SMART_LIST_LABELS = {
+        "today": "Today",
+        "overdue": "Overdue",
+        "week": "This week",
+    }
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.smart_filter: str | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -64,15 +78,42 @@ class TaskListScreen(Screen):
     def list_view(self) -> ListView:
         return self.query_one("#task-list", ListView)
 
+    def set_smart_filter(self, filter_name: str | None) -> None:
+        self.smart_filter = filter_name
+        self.app.sub_title = self.SMART_LIST_LABELS.get(filter_name, "")
+        self.refresh_tasks()
+
     def refresh_tasks(self, select_index: int | None = None) -> None:
         list_view = self.list_view
         list_view.clear()
-        rows = self.app.task_service.list_tasks_tree()
+        if self.smart_filter is None:
+            rows = self.app.task_service.list_tasks_tree()
+        else:
+            rows = [(t, 0) for t in self._smart_list_tasks()]
         for task, depth in rows:
             list_view.append(TaskRow(task, depth=depth))
         if rows:
             index = 0 if select_index is None else max(0, min(select_index, len(rows) - 1))
             list_view.index = index
+
+    def _smart_list_tasks(self) -> list[Task]:
+        today_iso = date.today().isoformat()
+        open_tasks = self.app.task_service.list_tasks(status=Status.OPEN)
+        if self.smart_filter == "today":
+            return [t for t in open_tasks if t.due_date == today_iso]
+        if self.smart_filter == "overdue":
+            return [t for t in open_tasks if t.due_date and t.due_date < today_iso]
+        if self.smart_filter == "week":
+            week_end = (date.today() + timedelta(days=7)).isoformat()
+            return [t for t in open_tasks if t.due_date and today_iso <= t.due_date <= week_end]
+        return open_tasks
+
+    def select_task_by_id(self, task_id: int) -> None:
+        self.set_smart_filter(None)
+        for index, item in enumerate(self.list_view.children):
+            if item.model.id == task_id:
+                self.list_view.index = index
+                return
 
     @property
     def selected_task(self) -> Task | None:
@@ -204,6 +245,16 @@ class TaskListScreen(Screen):
         from cad_tui.presentation.screens.calendar_screen import CalendarScreen
 
         self.app.push_screen(CalendarScreen())
+
+    def action_open_agenda(self) -> None:
+        from cad_tui.presentation.screens.agenda_screen import AgendaScreen
+
+        self.app.push_screen(AgendaScreen())
+
+    def action_open_stats(self) -> None:
+        from cad_tui.presentation.screens.stats_screen import StatsScreen
+
+        self.app.push_screen(StatsScreen())
 
     def _resolve_project(self, name: str | None) -> int | None:
         if not name:

@@ -19,6 +19,8 @@ HELP_TEXT = """\
   c          open calendar
   s          add subtask under selected
   A          quick add (free text, e.g. "Buy milk tmrw 3pm")
+  w          open agenda (next 14 days)
+  S          open stats
 
 [bold]Calendar[/]
   h/j/k/l    move day / week
@@ -26,6 +28,12 @@ HELP_TEXT = """\
   t          jump to today
   a d space  add / delete / toggle (selected day)
   esc        back to task list
+
+[bold]Command palette[/]
+  ctrl+k     open palette — fuzzy-search tasks to jump to them,
+             or run: Add task, Quick add, Undo, Open calendar,
+             Open agenda, Show stats, Smart list: Today/Overdue/
+             This week/All tasks
 
 [bold]Global[/]
   ctrl+t     toggle theme

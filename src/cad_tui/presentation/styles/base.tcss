@@ -140,3 +140,14 @@ ListView > ListItem.-highlight {
 #day-title {
     padding: 1 0;
 }
+
+/* Agenda / Stats */
+#agenda-title {
+    padding: 1 2;
+}
+
+#stats-body {
+    width: 50;
+    margin: 1 2;
+    padding: 1 2;
+}
