@@ -14,15 +14,20 @@ from cad_tui.data.db import connect
 from cad_tui.data.migrations import apply_migrations
 from cad_tui.data.repositories.project_repository import ProjectRepository
 from cad_tui.data.repositories.recurrence_repository import RecurrenceRepository
+from cad_tui.data.repositories.reminder_repository import ReminderRepository
 from cad_tui.data.repositories.tag_repository import TagRepository
 from cad_tui.data.repositories.task_repository import TaskRepository
 from cad_tui.data.repositories.time_log_repository import TimeLogRepository
+from cad_tui.infra.notification_adapter import send_notification
 from cad_tui.presentation.command_provider import TaskSearchProvider
 from cad_tui.presentation.screens.task_list import TaskListScreen
-from cad_tui.presentation.theme import THEMES
+from cad_tui.presentation.theme import build_themes
+from cad_tui.services.reminder_service import ReminderService
 from cad_tui.services.task_service import TaskService
 from cad_tui.services.time_tracking_service import TimeTrackingService
 from cad_tui.services.undo import UndoStack
+
+REMINDER_CHECK_INTERVAL_SECONDS = 60
 
 
 class CadTuiApp(App):
@@ -40,7 +45,7 @@ class CadTuiApp(App):
         self.db: sqlite3.Connection | None = None
 
     def on_mount(self) -> None:
-        for theme in THEMES:
+        for theme in build_themes(self.config.accent):
             self.register_theme(theme)
         self.theme = self.config.theme
 
@@ -55,8 +60,13 @@ class CadTuiApp(App):
         self.task_service = TaskService(self.task_repo, self.undo_stack, self.recurrence_repo)
         self.time_log_repo = TimeLogRepository(self.db)
         self.time_tracking = TimeTrackingService(self.time_log_repo)
+        self.reminder_repo = ReminderRepository(self.db)
+        self.reminder_service = ReminderService(self.task_service, self.reminder_repo)
 
         self.push_screen(TaskListScreen())
+
+        self._check_reminders()
+        self.set_interval(REMINDER_CHECK_INTERVAL_SECONDS, self._check_reminders)
 
     def on_unmount(self) -> None:
         if self.db is not None:
@@ -66,7 +76,12 @@ class CadTuiApp(App):
         self.theme = "cad-light" if self.theme == "cad-dark" else "cad-dark"
 
     def notify_desktop(self, message: str, title: str = "cad-tui") -> None:
-        """OS-level desktop notification. Implemented in Phase 5b; no-op until then."""
+        send_notification(message, title)
+
+    def _check_reminders(self) -> None:
+        for task in self.reminder_service.due_soon():
+            self.notify(f"Due soon: {task.title}")
+            self.notify_desktop(f"Due soon: {task.title}", title="cad-tui reminder")
 
     def action_open_pomodoro(self) -> None:
         self._goto_task_list()

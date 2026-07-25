@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 from cad_tui.app import CadTuiApp
 from cad_tui.config import AppConfig
@@ -74,7 +75,9 @@ async def test_pomodoro_session_completion_switches_to_break(tmp_path: Path) -> 
         await pilot.pause()
         screen = app.screen
         screen.remaining = 1
-        screen._tick()
+        with patch("cad_tui.app.send_notification") as mock_send:
+            screen._tick()
+        mock_send.assert_called_once()
         assert screen.on_break is True
         assert screen.remaining == BREAK_SECONDS
 
