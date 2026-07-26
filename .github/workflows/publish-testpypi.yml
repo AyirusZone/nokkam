@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/cad-tui
+      url: https://test.pypi.org/p/nokkam
     permissions:
       id-token: write
     steps:

@@ -3,14 +3,14 @@ stats_service functions were tested, never the screen that renders them."""
 
 from pathlib import Path
 
-from cad_tui.app import CadTuiApp
-from cad_tui.config import AppConfig
-from cad_tui.domain.models import Status, Task
-from cad_tui.presentation.screens.stats_screen import StatsScreen
+from nokkam.app import NokkamApp
+from nokkam.config import AppConfig
+from nokkam.domain.models import Status, Task
+from nokkam.presentation.screens.stats_screen import StatsScreen
 
 
-def make_app(tmp_path: Path) -> CadTuiApp:
-    return CadTuiApp(config=AppConfig(db_path=tmp_path / "data.db"))
+def make_app(tmp_path: Path) -> NokkamApp:
+    return NokkamApp(config=AppConfig(db_path=tmp_path / "data.db"))
 
 
 async def test_stats_screen_renders_completion_and_streak(tmp_path: Path) -> None:

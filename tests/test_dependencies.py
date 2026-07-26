@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from cad_tui.data.db import connect
-from cad_tui.data.migrations import apply_migrations
-from cad_tui.data.repositories.dependency_repository import DependencyRepository
-from cad_tui.data.repositories.task_repository import TaskRepository
-from cad_tui.domain.models import Task
-from cad_tui.services.task_service import TaskService
-from cad_tui.services.undo import UndoStack
+from nokkam.data.db import connect
+from nokkam.data.migrations import apply_migrations
+from nokkam.data.repositories.dependency_repository import DependencyRepository
+from nokkam.data.repositories.task_repository import TaskRepository
+from nokkam.domain.models import Task
+from nokkam.services.task_service import TaskService
+from nokkam.services.undo import UndoStack
 
 
 def make_service(db_path: Path) -> TaskService:
@@ -63,10 +63,10 @@ def test_service_without_dependency_repo_never_blocks(tmp_path: Path) -> None:
 
 
 async def test_toggle_complete_on_blocked_task_is_refused_via_ui(tmp_path: Path) -> None:
-    from cad_tui.app import CadTuiApp
-    from cad_tui.config import AppConfig
+    from nokkam.app import NokkamApp
+    from nokkam.config import AppConfig
 
-    app = CadTuiApp(config=AppConfig(db_path=tmp_path / "ui.db"))
+    app = NokkamApp(config=AppConfig(db_path=tmp_path / "ui.db"))
     async with app.run_test() as pilot:
         blocker = app.task_service.add_task(Task(title="Design"))
         blocked = app.task_service.add_task(Task(title="Build"))
@@ -85,10 +85,10 @@ async def test_toggle_complete_on_blocked_task_is_refused_via_ui(tmp_path: Path)
 async def test_form_saves_blocked_by_and_paired_fields(tmp_path: Path) -> None:
     from textual.widgets import Input
 
-    from cad_tui.app import CadTuiApp
-    from cad_tui.config import AppConfig
+    from nokkam.app import NokkamApp
+    from nokkam.config import AppConfig
 
-    app = CadTuiApp(config=AppConfig(db_path=tmp_path / "ui2.db"))
+    app = NokkamApp(config=AppConfig(db_path=tmp_path / "ui2.db"))
     async with app.run_test() as pilot:
         app.task_service.add_task(Task(title="Design"))
         app.screen.refresh_all()

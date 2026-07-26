@@ -61,7 +61,7 @@ jobs:
         run: mypy src
 
       - name: Pytest with coverage
-        run: pytest --cov=cad_tui --cov-report=xml --cov-report=html
+        run: pytest --cov=nokkam --cov-report=xml --cov-report=html
 
       - name: Build sdist and wheel
         run: python -m build

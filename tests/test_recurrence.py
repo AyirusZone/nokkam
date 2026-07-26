@@ -1,14 +1,14 @@
 from datetime import date
 from pathlib import Path
 
-from cad_tui.data.db import connect
-from cad_tui.data.migrations import apply_migrations
-from cad_tui.data.repositories.recurrence_repository import RecurrenceRepository
-from cad_tui.data.repositories.task_repository import TaskRepository
-from cad_tui.domain.models import Task
-from cad_tui.domain.recurrence import RecurrenceRule, next_occurrence
-from cad_tui.services.task_service import TaskService
-from cad_tui.services.undo import UndoStack
+from nokkam.data.db import connect
+from nokkam.data.migrations import apply_migrations
+from nokkam.data.repositories.recurrence_repository import RecurrenceRepository
+from nokkam.data.repositories.task_repository import TaskRepository
+from nokkam.domain.models import Task
+from nokkam.domain.recurrence import RecurrenceRule, next_occurrence
+from nokkam.services.task_service import TaskService
+from nokkam.services.undo import UndoStack
 
 
 def make_service(db_path: Path) -> tuple[TaskService, RecurrenceRepository]:

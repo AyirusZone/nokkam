@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from cad_tui.data.db import connect
-from cad_tui.data.migrations import apply_migrations
+from nokkam.data.db import connect
+from nokkam.data.migrations import apply_migrations
 
 EXPECTED_TABLES = {
     "project",

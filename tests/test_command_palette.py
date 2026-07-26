@@ -1,16 +1,16 @@
 from pathlib import Path
 
-from cad_tui.app import CadTuiApp
-from cad_tui.config import AppConfig
-from cad_tui.domain.models import Task
-from cad_tui.presentation.command_provider import TaskSearchProvider
-from cad_tui.presentation.screens.agenda_screen import AgendaScreen
-from cad_tui.presentation.screens.home_screen import HomeScreen
-from cad_tui.presentation.widgets.calendar_grid import CalendarGrid
+from nokkam.app import NokkamApp
+from nokkam.config import AppConfig
+from nokkam.domain.models import Task
+from nokkam.presentation.command_provider import TaskSearchProvider
+from nokkam.presentation.screens.agenda_screen import AgendaScreen
+from nokkam.presentation.screens.home_screen import HomeScreen
+from nokkam.presentation.widgets.calendar_grid import CalendarGrid
 
 
-def make_app(tmp_path: Path) -> CadTuiApp:
-    return CadTuiApp(config=AppConfig(db_path=tmp_path / "data.db"))
+def make_app(tmp_path: Path) -> NokkamApp:
+    return NokkamApp(config=AppConfig(db_path=tmp_path / "data.db"))
 
 
 async def test_jump_to_task_from_nested_screen_returns_to_home(tmp_path: Path) -> None:

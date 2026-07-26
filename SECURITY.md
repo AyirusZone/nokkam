@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-cad-tui is a single-user, local-only terminal application with no network
+nokkam is a single-user, local-only terminal application with no network
 listeners and no server component. Security fixes are released against the
 latest minor version on PyPI; there is no long-term support branch.
 
@@ -29,7 +29,7 @@ credited in the release notes unless you'd prefer otherwise.
 
 ## Scope
 
-Given cad-tui's local-only nature, reports of interest include (but aren't
+Given nokkam's local-only nature, reports of interest include (but aren't
 limited to):
 
 - Arbitrary code execution via crafted import/export files

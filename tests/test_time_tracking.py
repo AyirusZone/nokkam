@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from cad_tui.data.db import connect
-from cad_tui.data.migrations import apply_migrations
-from cad_tui.data.repositories.task_repository import TaskRepository
-from cad_tui.data.repositories.time_log_repository import TimeLogRepository
-from cad_tui.domain.models import Task
-from cad_tui.services.time_tracking_service import TimeTrackingService
+from nokkam.data.db import connect
+from nokkam.data.migrations import apply_migrations
+from nokkam.data.repositories.task_repository import TaskRepository
+from nokkam.data.repositories.time_log_repository import TimeLogRepository
+from nokkam.domain.models import Task
+from nokkam.services.time_tracking_service import TimeTrackingService
 
 
 def make_service(db_path: Path):

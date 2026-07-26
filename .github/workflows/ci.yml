@@ -45,7 +45,7 @@ jobs:
 
       - name: Pytest with coverage
         run: |
-          pytest --cov=cad_tui --cov-report=xml --cov-report=html
+          pytest --cov=nokkam --cov-report=xml --cov-report=html
 
       - name: Upload coverage report
         if: matrix.python-version == '3.11'

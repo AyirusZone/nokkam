@@ -3,13 +3,13 @@ from pathlib import Path
 
 from textual.widgets import Input
 
-from cad_tui.app import CadTuiApp
-from cad_tui.config import AppConfig
-from cad_tui.presentation.screens.home_screen import HomeScreen
+from nokkam.app import NokkamApp
+from nokkam.config import AppConfig
+from nokkam.presentation.screens.home_screen import HomeScreen
 
 
-def make_app(tmp_path: Path) -> CadTuiApp:
-    return CadTuiApp(config=AppConfig(db_path=tmp_path / "data.db"))
+def make_app(tmp_path: Path) -> NokkamApp:
+    return NokkamApp(config=AppConfig(db_path=tmp_path / "data.db"))
 
 
 async def test_quick_add_parses_trailing_date(tmp_path: Path) -> None:
@@ -31,7 +31,7 @@ async def test_quick_add_parses_trailing_date(tmp_path: Path) -> None:
 async def test_add_subtask_via_ui_appears_indented(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
-        from cad_tui.domain.models import Task
+        from nokkam.domain.models import Task
 
         parent = app.task_service.add_task(Task(title="Plan trip"))
         app.screen.refresh_all()

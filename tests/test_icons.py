@@ -1,4 +1,4 @@
-from cad_tui.domain.icons import icon_for_title
+from nokkam.domain.icons import icon_for_title
 
 
 def test_matches_a_default_keyword_case_insensitively() -> None:

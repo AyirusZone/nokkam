@@ -2,19 +2,19 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
-from cad_tui.app import CadTuiApp
-from cad_tui.config import AppConfig
-from cad_tui.domain.models import Task
+from nokkam.app import NokkamApp
+from nokkam.config import AppConfig
+from nokkam.domain.models import Task
 
 
-def make_app(tmp_path: Path, accent: str = "#0A84FF") -> CadTuiApp:
-    return CadTuiApp(config=AppConfig(db_path=tmp_path / "data.db", accent=accent))
+def make_app(tmp_path: Path, accent: str = "#0A84FF") -> NokkamApp:
+    return NokkamApp(config=AppConfig(db_path=tmp_path / "data.db", accent=accent))
 
 
 async def test_notify_desktop_delegates_to_adapter(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test():
-        with patch("cad_tui.app.send_notification") as mock_send:
+        with patch("nokkam.app.send_notification") as mock_send:
             app.notify_desktop("hello", title="Test")
         mock_send.assert_called_once_with("hello", "Test")
 
@@ -48,5 +48,5 @@ async def test_check_reminders_is_idempotent(tmp_path: Path) -> None:
 async def test_custom_accent_color_registers_theme(tmp_path: Path) -> None:
     app = make_app(tmp_path, accent="#FF0000")
     async with app.run_test():
-        theme = app.get_theme("cad-dark")
+        theme = app.get_theme("nokkam-dark")
         assert theme.primary == "#FF0000"

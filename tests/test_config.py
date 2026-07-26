@@ -3,7 +3,7 @@ exercised incidentally via AppConfig(...) construction elsewhere."""
 
 from pathlib import Path
 
-from cad_tui.config import DEFAULT_ACCENT, AppConfig, load_config
+from nokkam.config import DEFAULT_ACCENT, AppConfig, load_config
 
 
 def test_missing_config_file_returns_defaults(tmp_path: Path) -> None:
@@ -13,11 +13,11 @@ def test_missing_config_file_returns_defaults(tmp_path: Path) -> None:
 
 def test_load_config_reads_theme_and_accent(tmp_path: Path) -> None:
     path = tmp_path / "config.toml"
-    path.write_text('theme = "cad-light"\naccent = "#00FF00"\n')
+    path.write_text('theme = "nokkam-light"\naccent = "#00FF00"\n')
 
     config = load_config(path)
 
-    assert config.theme == "cad-light"
+    assert config.theme == "nokkam-light"
     assert config.accent == "#00FF00"
 
 
@@ -27,7 +27,7 @@ def test_load_config_defaults_theme_and_accent_when_absent(tmp_path: Path) -> No
 
     config = load_config(path)
 
-    assert config.theme == "cad-dark"
+    assert config.theme == "nokkam-dark"
     assert config.accent == DEFAULT_ACCENT
 
 

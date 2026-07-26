@@ -1,15 +1,15 @@
 from datetime import date, timedelta
 from pathlib import Path
 
-from cad_tui.app import CadTuiApp
-from cad_tui.config import AppConfig
-from cad_tui.domain.models import Task
-from cad_tui.presentation.screens.task_list import TaskRow
-from cad_tui.presentation.widgets.app_header import AppHeader
+from nokkam.app import NokkamApp
+from nokkam.config import AppConfig
+from nokkam.domain.models import Task
+from nokkam.presentation.screens.task_list import TaskRow
+from nokkam.presentation.widgets.app_header import AppHeader
 
 
-def make_app(tmp_path: Path) -> CadTuiApp:
-    return CadTuiApp(config=AppConfig(db_path=tmp_path / "data.db"))
+def make_app(tmp_path: Path) -> NokkamApp:
+    return NokkamApp(config=AppConfig(db_path=tmp_path / "data.db"))
 
 
 async def test_smart_list_today(tmp_path: Path) -> None:

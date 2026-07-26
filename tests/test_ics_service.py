@@ -1,11 +1,11 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from cad_tui.data.db import connect
-from cad_tui.data.migrations import apply_migrations
-from cad_tui.data.repositories.event_repository import EventRepository
-from cad_tui.infra.ics_adapter import ParsedEvent
-from cad_tui.services.ics_service import IcsService
+from nokkam.data.db import connect
+from nokkam.data.migrations import apply_migrations
+from nokkam.data.repositories.event_repository import EventRepository
+from nokkam.infra.ics_adapter import ParsedEvent
+from nokkam.services.ics_service import IcsService
 
 SAMPLE_ICS = """\
 BEGIN:VEVENT
@@ -85,9 +85,9 @@ def test_refresh_replaces_stale_events_on_resync(tmp_path: Path) -> None:
 def test_url_source_uses_host_as_calendar_label(tmp_path: Path) -> None:
     service = make_service(tmp_path / "data.db", ["https://example.com/cal.ics"])
     with (
-        patch("cad_tui.services.ics_service.fetch_ics_text", return_value=SAMPLE_ICS),
+        patch("nokkam.services.ics_service.fetch_ics_text", return_value=SAMPLE_ICS),
         patch(
-            "cad_tui.services.ics_service.parse_ics",
+            "nokkam.services.ics_service.parse_ics",
             return_value=[
                 ParsedEvent(
                     uid="abc-123",

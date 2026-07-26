@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from cad_tui.cli import run_cli
-from cad_tui.config import AppConfig
-from cad_tui.data.db import connect
-from cad_tui.data.migrations import apply_migrations
-from cad_tui.data.repositories.project_repository import ProjectRepository
-from cad_tui.data.repositories.tag_repository import TagRepository
-from cad_tui.data.repositories.task_repository import TaskRepository
+from nokkam.cli import run_cli
+from nokkam.config import AppConfig
+from nokkam.data.db import connect
+from nokkam.data.migrations import apply_migrations
+from nokkam.data.repositories.project_repository import ProjectRepository
+from nokkam.data.repositories.tag_repository import TagRepository
+from nokkam.data.repositories.task_repository import TaskRepository
 
 
 def make_config(tmp_path: Path) -> AppConfig:
@@ -69,9 +69,9 @@ async def test_cli_added_task_visible_in_tui(tmp_path: Path) -> None:
     config = make_config(tmp_path)
     run_cli(["add", "From CLI"], config)
 
-    from cad_tui.app import CadTuiApp
+    from nokkam.app import NokkamApp
 
-    app = CadTuiApp(config=config)
+    app = NokkamApp(config=config)
     async with app.run_test():
         titles = [t.title for t in app.task_service.list_tasks()]
         assert "From CLI" in titles

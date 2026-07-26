@@ -1,6 +1,6 @@
 from datetime import date
 
-from cad_tui.domain.nl_date_parser import parse_quick_text
+from nokkam.domain.nl_date_parser import parse_quick_text
 
 ANCHOR = date(2026, 7, 25)  # a Saturday
 

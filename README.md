@@ -1,9 +1,9 @@
-# cad
+# nokkam
 
 [![CI](https://github.com/AyirusZone/cad_tui/actions/workflows/ci.yml/badge.svg)](https://github.com/AyirusZone/cad_tui/actions/workflows/ci.yml)
-[![PyPI version](https://img.shields.io/pypi/v/cad-tui.svg)](https://pypi.org/project/cad-tui/)
-[![Python versions](https://img.shields.io/pypi/pyversions/cad-tui.svg)](https://pypi.org/project/cad-tui/)
-[![Downloads](https://img.shields.io/pypi/dm/cad-tui.svg)](https://pypi.org/project/cad-tui/)
+[![PyPI version](https://img.shields.io/pypi/v/nokkam.svg)](https://pypi.org/project/nokkam/)
+[![Python versions](https://img.shields.io/pypi/pyversions/nokkam.svg)](https://pypi.org/project/nokkam/)
+[![Downloads](https://img.shields.io/pypi/dm/nokkam.svg)](https://pypi.org/project/nokkam/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A calcurse-inspired terminal task manager and calendar. Calendar and tasks
@@ -13,7 +13,7 @@ machine.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ cad / home                                        July 2026  │
+│ nokkam / home                                     July 2026  │
 ├─────────────────┬────────────────────────────────────────────┤
 │ mo tu we th fr  │ Saturday, 25 July 2026                     │
 │ sa su           │    Design system spec        2026-07-25    │
@@ -82,7 +82,7 @@ each task surfaced only once
 **Import/export** — JSON and CSV round-trip tasks including tags; ICS
 export for calendar apps
 
-**CLI quick-capture** — `cad-tui add "..."` writes a task from your shell
+**CLI quick-capture** — `nokkam add "..."` writes a task from your shell
 without opening the UI
 
 **Design** — a considered visual system, not default Textual chrome: warm
@@ -98,14 +98,14 @@ Windows (Windows Terminal recommended for full color/glyph support).
 **From PyPI** (once published):
 
 ```bash
-pipx install cad-tui   # or: pip install cad-tui
+pipx install nokkam   # or: pip install nokkam
 ```
 
 **From source:**
 
 ```bash
-git clone git@github.com:AyirusZone/cad_tui.git
-cd cad_tui
+git clone git@github.com:AyirusZone/cad_tui.git nokkam
+cd nokkam
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install .
@@ -117,12 +117,12 @@ The only runtime dependency is [Textual](https://github.com/Textualize/textual)
 ## Usage
 
 ```bash
-cad-tui
+nokkam
 ```
 
 launches the home screen: calendar on the left, the selected day's tasks
 top-right, the full task list bottom-right. Data lives in
-`~/.cad-tui/data.db` (SQLite) — nothing else to set up.
+`~/.nokkam/data.db` (SQLite) — nothing else to set up.
 
 ### Panes and focus
 
@@ -183,8 +183,8 @@ tags.
 Add a task without opening the UI — writes straight to the same database:
 
 ```bash
-cad-tui add "Buy milk tmrw 3pm"
-cad-tui add "Renew passport" --due 2026-09-01 --priority high --project Admin --tags docs,travel
+nokkam add "Buy milk tmrw 3pm"
+nokkam add "Renew passport" --due 2026-09-01 --priority high --project Admin --tags docs,travel
 ```
 
 Flags: `--due YYYY-MM-DD` (overrides any date parsed from the text),
@@ -193,24 +193,24 @@ Flags: `--due YYYY-MM-DD` (overrides any date parsed from the text),
 ### Import / export
 
 ```bash
-cad-tui export --format json --out tasks.json
-cad-tui export --format csv  --out tasks.csv
-cad-tui export --format ics  --out tasks.ics   # calendar apps
+nokkam export --format json --out tasks.json
+nokkam export --format csv  --out tasks.csv
+nokkam export --format ics  --out tasks.ics   # calendar apps
 
-cad-tui import --format json --in tasks.json
-cad-tui import --format csv  --in tasks.csv
+nokkam import --format json --in tasks.json
+nokkam import --format csv  --in tasks.csv
 ```
 
 JSON and CSV round-trip tags by name; ICS is export-only.
 
 ## Configuration
 
-Optional — `~/.cad-tui/config.toml`:
+Optional — `~/.nokkam/config.toml`:
 
 ```toml
-theme = "cad-dark"       # or "cad-light"
+theme = "nokkam-dark"       # or "nokkam-light"
 accent = "#FF6B4A"       # any hex color; drives both themes' accent
-db_path = "~/.cad-tui/data.db"
+db_path = "~/.nokkam/data.db"
 ```
 
 Nothing needs to be set — these are the defaults if the file is absent.
@@ -218,8 +218,8 @@ Nothing needs to be set — these are the defaults if the file is absent.
 ## Development
 
 ```bash
-git clone https://github.com/AyirusZone/cad_tui.git
-cd cad_tui
+git clone https://github.com/AyirusZone/cad_tui.git nokkam
+cd nokkam
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
@@ -234,7 +234,7 @@ for the phase-by-phase build log.
 
 ```bash
 pytest
-pytest --cov=cad_tui --cov-report=term-missing --cov-report=xml --cov-report=html
+pytest --cov=nokkam --cov-report=term-missing --cov-report=xml --cov-report=html
 ```
 
 ### Linting
@@ -265,7 +265,7 @@ twine check dist/*
 
 ## Versioning
 
-cad-tui follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+nokkam follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
 Development releases use a PEP 440 dev suffix, e.g. `0.5.0.dev1`; stable
 releases drop it, e.g. `0.5.0`. See [CHANGELOG.md](CHANGELOG.md) for the
 version history.

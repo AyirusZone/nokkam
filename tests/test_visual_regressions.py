@@ -7,17 +7,17 @@ theme colors (needs the `$` prefix)."""
 import re
 from pathlib import Path
 
-from cad_tui.app import CadTuiApp
-from cad_tui.config import AppConfig
-from cad_tui.domain.models import Task
-from cad_tui.presentation.widgets.app_header import AppHeader
+from nokkam.app import NokkamApp
+from nokkam.config import AppConfig
+from nokkam.domain.models import Task
+from nokkam.presentation.widgets.app_header import AppHeader
 
 
-def make_app(tmp_path: Path) -> CadTuiApp:
-    return CadTuiApp(config=AppConfig(db_path=tmp_path / "data.db"))
+def make_app(tmp_path: Path) -> NokkamApp:
+    return NokkamApp(config=AppConfig(db_path=tmp_path / "data.db"))
 
 
-def rendered_texts(app: CadTuiApp) -> list[str]:
+def rendered_texts(app: NokkamApp) -> list[str]:
     svg = app.export_screenshot()
     return re.findall(r"<text[^>]*>([^<]*)</text>", svg)
 
@@ -50,7 +50,7 @@ async def test_app_header_renders_wordmark_in_accent_color(tmp_path: Path) -> No
         await pilot.pause()
         title = app.screen.query_one("#app-header-title")
         strip = title.render_line(0)
-        segments = [s for s in strip if "cad" in s.text]
+        segments = [s for s in strip if "nokkam" in s.text]
         assert segments, "wordmark not found in rendered header"
         theme = app.get_theme(app.theme)
         rendered_hex = segments[0].style.color.get_truecolor().hex
@@ -80,7 +80,7 @@ async def test_header_and_footer_visible_in_full_render(tmp_path: Path) -> None:
     async with app.run_test() as pilot:
         await pilot.pause()
         joined = " ".join(rendered_texts(app))
-        assert "cad" in joined
+        assert "nokkam" in joined
         assert "home" in joined
 
 
@@ -103,7 +103,7 @@ async def test_day_cell_keeps_readable_width_on_narrow_terminal(tmp_path: Path) 
     day cell's border-left consumed its entire remaining content width,
     collapsing it to 1 column — wide enough to draw a border but not the
     day number or task preview inside it."""
-    from cad_tui.presentation.widgets.calendar_grid import DayCell
+    from nokkam.presentation.widgets.calendar_grid import DayCell
 
     app = make_app(tmp_path)
     async with app.run_test(size=(70, 30)) as pilot:
@@ -113,8 +113,8 @@ async def test_day_cell_keeps_readable_width_on_narrow_terminal(tmp_path: Path) 
 
 
 async def test_task_row_badge_uses_theme_color_not_default_foreground(tmp_path: Path) -> None:
-    from cad_tui.domain.recurrence import RecurrenceRule
-    from cad_tui.presentation.screens.task_list import TaskRow
+    from nokkam.domain.recurrence import RecurrenceRule
+    from nokkam.presentation.screens.task_list import TaskRow
 
     app = make_app(tmp_path)
     async with app.run_test() as pilot:

@@ -1,4 +1,4 @@
-from cad_tui.infra.ics_adapter import parse_ics
+from nokkam.infra.ics_adapter import parse_ics
 
 SAMPLE_ICS = """\
 BEGIN:VCALENDAR

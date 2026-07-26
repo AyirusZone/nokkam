@@ -1,6 +1,6 @@
-# Contributing to cad-tui
+# Contributing to nokkam
 
-Thanks for your interest in improving cad-tui. This document covers how the
+Thanks for your interest in improving nokkam. This document covers how the
 project is branched, how to set up a dev environment, and what's expected of
 a pull request.
 
@@ -19,8 +19,8 @@ passing CI.
 ## Development setup
 
 ```bash
-git clone https://github.com/AyirusZone/cad_tui.git
-cd cad_tui
+git clone https://github.com/AyirusZone/cad_tui.git nokkam
+cd nokkam
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
@@ -31,7 +31,7 @@ pre-commit install
 
 ```bash
 pytest -q
-pytest --cov=cad_tui --cov-report=term-missing --cov-report=xml --cov-report=html
+pytest --cov=nokkam --cov-report=term-missing --cov-report=xml --cov-report=html
 ```
 
 ## Linting, formatting, type checking
@@ -55,7 +55,7 @@ twine check dist/*
 
 ## Versioning and releases
 
-cad-tui follows [Semantic Versioning](https://semver.org/). Release
+nokkam follows [Semantic Versioning](https://semver.org/). Release
 mechanics (tagging, publishing) are documented in the "Release process"
 section of [README.md](README.md) — contributors don't need to cut releases
 themselves, only maintainers do, once a PR has landed on `development` or

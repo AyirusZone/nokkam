@@ -5,8 +5,8 @@ overflow truncation) had a test anywhere in the suite."""
 
 from datetime import date
 
-from cad_tui.domain.models import Event, Status, Task
-from cad_tui.presentation.widgets.calendar_grid import MAX_PREVIEW_ITEMS, CalendarGrid, DayCell
+from nokkam.domain.models import Event, Status, Task
+from nokkam.presentation.widgets.calendar_grid import MAX_PREVIEW_ITEMS, CalendarGrid, DayCell
 
 
 def make_task(**kwargs) -> Task:

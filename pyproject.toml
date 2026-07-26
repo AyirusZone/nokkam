@@ -1,5 +1,5 @@
 [project]
-name = "cad-tui"
+name = "nokkam"
 version = "0.1.0"
 description = "A calcurse-inspired terminal task manager and calendar, styled with a Material-tonal / Apple-HIG color system."
 readme = "README.md"
@@ -41,7 +41,7 @@ Repository = "https://github.com/AyirusZone/cad_tui"
 Issues = "https://github.com/AyirusZone/cad_tui/issues"
 
 [project.scripts]
-cad-tui = "cad_tui.app:main"
+nokkam = "nokkam.app:main"
 
 [project.optional-dependencies]
 dev = [
@@ -65,14 +65,14 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-cad_tui = ["presentation/styles/*.tcss"]
+nokkam = ["presentation/styles/*.tcss"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["cad_tui"]
+source = ["nokkam"]
 branch = true
 
 [tool.coverage.report]

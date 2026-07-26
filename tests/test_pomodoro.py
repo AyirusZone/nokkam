@@ -1,16 +1,16 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from cad_tui.app import CadTuiApp
-from cad_tui.config import AppConfig
-from cad_tui.domain.models import Task
-from cad_tui.presentation.screens.home_screen import HomeScreen
-from cad_tui.presentation.screens.pomodoro_screen import BREAK_SECONDS, PomodoroScreen
-from cad_tui.presentation.widgets.app_header import AppHeader
+from nokkam.app import NokkamApp
+from nokkam.config import AppConfig
+from nokkam.domain.models import Task
+from nokkam.presentation.screens.home_screen import HomeScreen
+from nokkam.presentation.screens.pomodoro_screen import BREAK_SECONDS, PomodoroScreen
+from nokkam.presentation.widgets.app_header import AppHeader
 
 
-def make_app(tmp_path: Path) -> CadTuiApp:
-    return CadTuiApp(config=AppConfig(db_path=tmp_path / "data.db"))
+def make_app(tmp_path: Path) -> NokkamApp:
+    return NokkamApp(config=AppConfig(db_path=tmp_path / "data.db"))
 
 
 async def test_toggle_timer_via_ui(tmp_path: Path) -> None:
@@ -143,7 +143,7 @@ async def test_pomodoro_session_completion_switches_to_break(tmp_path: Path) -> 
         await pilot.pause()
         screen = app.screen
         screen.remaining = 1
-        with patch("cad_tui.app.send_notification") as mock_send:
+        with patch("nokkam.app.send_notification") as mock_send:
             screen._tick()
         mock_send.assert_called_once()
         assert screen.on_break is True

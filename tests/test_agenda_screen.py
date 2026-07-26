@@ -1,14 +1,14 @@
 from datetime import date, timedelta
 from pathlib import Path
 
-from cad_tui.app import CadTuiApp
-from cad_tui.config import AppConfig
-from cad_tui.domain.models import Task
-from cad_tui.presentation.screens.agenda_screen import AgendaScreen
+from nokkam.app import NokkamApp
+from nokkam.config import AppConfig
+from nokkam.domain.models import Task
+from nokkam.presentation.screens.agenda_screen import AgendaScreen
 
 
-def make_app(tmp_path: Path) -> CadTuiApp:
-    return CadTuiApp(config=AppConfig(db_path=tmp_path / "data.db"))
+def make_app(tmp_path: Path) -> NokkamApp:
+    return NokkamApp(config=AppConfig(db_path=tmp_path / "data.db"))
 
 
 async def test_agenda_lists_only_next_14_days_sorted(tmp_path: Path) -> None:
@@ -53,7 +53,7 @@ async def test_agenda_toggle_complete_then_undo(tmp_path: Path) -> None:
 
 
 async def test_agenda_back_returns_to_home(tmp_path: Path) -> None:
-    from cad_tui.presentation.screens.home_screen import HomeScreen
+    from nokkam.presentation.screens.home_screen import HomeScreen
 
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
