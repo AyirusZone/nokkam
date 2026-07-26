@@ -84,3 +84,33 @@ async def test_smart_list_system_command_applies_filter(tmp_path: Path) -> None:
         await pilot.pause()
 
         assert app.screen.smart_filter == "overdue"
+
+
+async def test_task_search_provider_masks_private_task_title(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        app.task_service.add_task(Task(title="Surprise party planning", private=True))
+        await pilot.pause()
+
+        provider = TaskSearchProvider(app.screen)
+        hits = [hit async for hit in provider.search("surprise")]
+
+        assert len(hits) == 1
+        assert hits[0].match_display == "•••••"
+
+
+async def test_discover_lists_recent_tasks_masking_private_ones(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        app.task_service.add_task(Task(title="Public task"))
+        app.task_service.add_task(Task(title="Secret task", private=True))
+        await pilot.pause()
+
+        provider = TaskSearchProvider(app.screen)
+        hits = [hit async for hit in provider.discover()]
+
+        assert len(hits) == 2
+        by_display = {hit.display: hit for hit in hits}
+        assert "Public task" in by_display
+        assert "•••••" in by_display
+        assert "Secret task" not in by_display

@@ -19,6 +19,7 @@ _COLUMNS = (
     "actual_min",
     "parent_task_id",
     "recurrence_id",
+    "private",
 )
 
 
@@ -102,8 +103,8 @@ class TaskRepository:
                 """INSERT INTO task
                    (id, title, notes, project_id, priority, status, due_date, due_time,
                     estimate_min, actual_min, parent_task_id, recurrence_id,
-                    reschedule_count, created_at, updated_at, completed_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    reschedule_count, created_at, updated_at, completed_at, private)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     task.id,
                     task.title,
@@ -121,6 +122,7 @@ class TaskRepository:
                     task.created_at,
                     task.updated_at,
                     task.completed_at,
+                    task.private,
                 ),
             )
             self._set_tags(task.id, task.tag_ids)
@@ -159,4 +161,5 @@ class TaskRepository:
             updated_at=row["updated_at"],
             completed_at=row["completed_at"],
             tag_ids=tag_ids,
+            private=bool(row["private"]),
         )

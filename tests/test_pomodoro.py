@@ -6,6 +6,7 @@ from cad_tui.config import AppConfig
 from cad_tui.domain.models import Task
 from cad_tui.presentation.screens.home_screen import HomeScreen
 from cad_tui.presentation.screens.pomodoro_screen import BREAK_SECONDS, PomodoroScreen
+from cad_tui.presentation.widgets.app_header import AppHeader
 
 
 def make_app(tmp_path: Path) -> CadTuiApp:
@@ -26,6 +27,73 @@ async def test_toggle_timer_via_ui(tmp_path: Path) -> None:
         await pilot.press("t")
         await pilot.pause()
         assert app.time_tracking.active_task_id is None
+
+
+async def test_running_timer_shows_in_header_and_clears_on_stop(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        app.task_service.add_task(Task(title="Focus work"))
+        app.screen.refresh_all()
+        await pilot.pause()
+        header = app.screen.query_one(AppHeader)
+        original_meta = header.meta
+
+        await pilot.press("t")
+        await pilot.pause()
+        assert header.timer_text is not None
+        assert "Focus work" in header.timer_text
+        assert "⏱" in header.timer_text
+        # the underlying screen meta (month/smart-filter label) is untouched
+        # by the timer override — only what's rendered changes
+        assert header.meta == original_meta
+
+        await pilot.press("t")
+        await pilot.pause()
+        assert header.timer_text is None
+
+
+async def test_pause_resume_and_stop_via_ui(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        task = app.task_service.add_task(Task(title="Focus work"))
+        app.screen.refresh_all()
+        await pilot.pause()
+        header = app.screen.query_one(AppHeader)
+
+        await pilot.press("t")
+        await pilot.pause()
+        assert app.time_tracking.active_task_id == task.id
+        assert app.time_tracking.is_paused is False
+
+        await pilot.press("p")
+        await pilot.pause()
+        assert app.time_tracking.is_paused is True
+        assert app.time_tracking.active_task_id == task.id  # still active, just paused
+        assert "⏸" in (header.timer_text or "")
+        assert "paused" in (header.timer_text or "")
+
+        await pilot.press("p")
+        await pilot.pause()
+        assert app.time_tracking.is_paused is False
+        assert app.time_tracking.active_task_id == task.id
+        assert "⏱" in (header.timer_text or "")
+
+        # 't' still fully stops the timer, pause/resume cycles notwithstanding
+        await pilot.press("t")
+        await pilot.pause()
+        assert app.time_tracking.active_task_id is None
+        assert app.time_tracking.is_paused is False
+        assert header.timer_text is None
+
+
+async def test_pause_is_noop_with_no_active_timer(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        await pilot.press("p")
+        await pilot.pause()
+        assert app.time_tracking.active_task_id is None
+        assert app.time_tracking.is_paused is False
 
 
 async def test_starting_timer_on_second_task_stops_first(tmp_path: Path) -> None:

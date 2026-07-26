@@ -68,7 +68,6 @@ TaskFormModal, HelpModal, QuickAddModal, PomodoroScreen {
 #task-form {
     width: 60;
     height: auto;
-    max-height: 100%;
     padding: 0 2;
 }
 
@@ -91,8 +90,27 @@ TaskFormModal, HelpModal, QuickAddModal, PomodoroScreen {
     margin-right: 1;
 }
 
+#task-form .form-actions {
+    height: auto;
+    margin-top: 1;
+}
+
+#task-form #private {
+    height: 1;
+    margin-top: 1;
+    background: transparent;
+    border: none;
+}
+
 #help-panel {
-    width: 50;
+    /* Wide enough that the longest keybinding line (~80 cols) doesn't
+       word-wrap — wrapped lines were inflating this panel's auto-height
+       to ~85% of the screen, which is what made it look "stuck at the
+       top" instead of centered: there was almost no room left to center
+       into. A comfortably wide, short box centers the way it should. */
+    width: 92;
+    max-width: 100%;
+    height: auto;
     max-height: 90%;
     padding: 1 2;
 }
@@ -104,6 +122,18 @@ TaskFormModal, HelpModal, QuickAddModal, PomodoroScreen {
 }
 
 #quick-add Input {
+    border: none;
+    background: $surface;
+    height: 1;
+}
+
+#text-prompt {
+    width: 44;
+    height: auto;
+    padding: 1 2;
+}
+
+#text-prompt Input {
     border: none;
     background: $surface;
     height: 1;
@@ -165,39 +195,79 @@ ListView > ListItem.-highlight {
     border-left: thick $foreground 12%;
 }
 
-/* ---------- Home: calendar + tasks side by side ---------- */
+.project-group-header {
+    margin-top: 1;
+    color: $foreground 70%;
+}
+
+.project-group-header:first-of-type {
+    margin-top: 0;
+}
+
+.event-row {
+    color: $foreground 70%;
+    border-left: thick $secondary 40%;
+}
+
+/* ---------- Home: full-width calendar with tasks side by side ---------- */
 #home-body {
     height: 1fr;
 }
 
-#calendar {
-    width: 30;
+#main-pane {
+    width: 2fr;
     height: 1fr;
+}
+
+#calendar {
+    width: 1fr;
+    height: 2fr;
     padding: 1 1;
-    border-right: solid $panel;
+    border-bottom: solid $panel;
 }
 
 #calendar:focus {
     background: $foreground 4%;
 }
 
-#calendar-grid {
-    grid-size: 7;
-    grid-gutter: 0 1;
-    width: 27;
+#calendar-weeks {
+    width: 1fr;
     height: auto;
 }
 
-.weekday-label {
-    color: $foreground 40%;
-    text-align: center;
+.calendar-header-row {
+    width: 1fr;
     height: 1;
 }
 
+.calendar-week-row {
+    width: 1fr;
+    height: 4;
+}
+
+.weekday-label {
+    width: 1fr;
+    color: $foreground 40%;
+    text-align: left;
+    text-style: bold;
+}
+
+.weekday-label.weekend {
+    color: $secondary;
+}
+
 .day-cell {
-    text-align: center;
-    height: 1;
+    width: 1fr;
+    height: 1fr;
+    text-align: left;
+    padding: 0 1;
     color: $foreground 80%;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+.day-cell.weekend {
+    color: $secondary 90%;
 }
 
 .day-cell.other-month {
@@ -210,9 +280,8 @@ ListView > ListItem.-highlight {
 }
 
 .day-cell.selected {
-    background: $accent 25%;
-    color: $accent;
-    text-style: bold;
+    background: $accent 20%;
+    border-left: thick $accent;
 }
 
 #day-pane {
@@ -221,25 +290,49 @@ ListView > ListItem.-highlight {
     padding: 0 2;
 }
 
-#day-title, #all-tasks-title {
+#day-title {
     padding: 1 0;
     color: $foreground 70%;
 }
 
 #day-tasks {
-    height: 9;
-    border-bottom: solid $panel;
-}
-
-#task-list {
     height: 1fr;
 }
 
-/* ---------- Stats ---------- */
-#stats-body {
-    width: 50;
-    margin: 1 2;
+#filter-tabs {
+    width: 1fr;
+    min-width: 20;
+    max-width: 40;
+    height: 1fr;
+    border-left: solid $panel;
+}
+
+#projects-list, #tags-list, #task-list {
+    height: 1fr;
+}
+
+/* ---------- Agenda ---------- */
+#agenda-pane {
+    width: 1fr;
+    max-width: 100;
+    height: 1fr;
     padding: 1 2;
+}
+
+#agenda-list {
+    height: 1fr;
+    margin-top: 1;
+}
+
+/* ---------- Stats ---------- */
+StatsScreen {
+    align: center middle;
+}
+
+#stats-body {
+    width: 56;
+    height: auto;
+    padding: 2 3;
 }
 
 /* ---------- Pomodoro ---------- */

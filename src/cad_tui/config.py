@@ -22,6 +22,13 @@ class AppConfig:
     accent: str = DEFAULT_ACCENT
     db_path: Path = field(default_factory=lambda: default_app_dir() / "data.db")
     app_dir: Path = field(default_factory=default_app_dir)
+    # Keyword -> icon overrides, merged over the built-in defaults (see
+    # domain/icons.py). e.g. icons = { flight = "✈", standup = "🗣" }
+    icons: dict[str, str] = field(default_factory=dict)
+    # Local paths or URLs to read-only .ics calendars (iCloud/Google Calendar
+    # exports or share links). Empty by default — no network access unless
+    # you opt in here.
+    ics_sources: list[str] = field(default_factory=list)
 
 
 def load_config(config_path: Path | None = None) -> AppConfig:
@@ -38,4 +45,6 @@ def load_config(config_path: Path | None = None) -> AppConfig:
         accent=raw.get("accent", DEFAULT_ACCENT),
         db_path=Path(raw["db_path"]).expanduser() if "db_path" in raw else app_dir / "data.db",
         app_dir=app_dir,
+        icons=raw.get("icons", {}),
+        ics_sources=raw.get("ics_sources", []),
     )

@@ -4,6 +4,7 @@ from pathlib import Path
 from cad_tui.app import CadTuiApp
 from cad_tui.config import AppConfig
 from cad_tui.domain.models import Task
+from cad_tui.presentation.screens.task_list import TaskRow
 from cad_tui.presentation.widgets.app_header import AppHeader
 
 
@@ -79,7 +80,7 @@ async def test_clearing_smart_filter_restores_full_tree(tmp_path: Path) -> None:
         app.screen.set_smart_filter(None)
         await pilot.pause()
 
-        titles = [i.model.title for i in app.screen.all_list.children]
+        titles = [i.model.title for i in app.screen.all_list.children if isinstance(i, TaskRow)]
         assert titles == ["Task A"]
         # no smart filter active -> header meta falls back to the calendar's month
         assert app.screen.query_one(AppHeader).meta == date.today().strftime("%B %Y")

@@ -61,9 +61,15 @@ class PomodoroScreen(ModalScreen[None]):
         minutes, seconds = divmod(max(self.remaining, 0), 60)
         phase = "Break" if self.on_break else "Focus"
         state = "Paused" if self.paused else "Running"
+        # The countdown is the one thing worth reading at a glance — give it
+        # more visual weight than the surrounding labels: bold, accented
+        # while running (dimmed once paused), and letter-spaced to read
+        # larger than plain "MM:SS" would in a terminal's fixed line height.
+        time_color = "$foreground 50%" if self.paused else "$accent"
+        big_time = " ".join(f"{minutes:02d}:{seconds:02d}")
         self.query_one("#pomodoro-display", Static).update(
             f"[bold $accent]{phase}[/]\n\n"
-            f"{minutes:02d}:{seconds:02d}\n\n"
+            f"[bold {time_color}]{big_time}[/]\n\n"
             f"[dim]{state} — space pause/resume, r reset, esc close[/]"
         )
 

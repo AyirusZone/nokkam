@@ -81,3 +81,41 @@ def test_no_command_prints_help_and_returns_nonzero(tmp_path: Path) -> None:
     config = make_config(tmp_path)
     exit_code = run_cli([], config)
     assert exit_code == 1
+
+
+def test_export_json_writes_file_and_prints_count(tmp_path: Path, capsys) -> None:
+    config = make_config(tmp_path)
+    run_cli(["add", "Buy milk"], config)
+    out_path = tmp_path / "out.json"
+
+    exit_code = run_cli(["export", "--format", "json", "--out", str(out_path)], config)
+
+    assert exit_code == 0
+    assert out_path.exists()
+    assert "Exported 1 task(s)" in capsys.readouterr().out
+
+
+def test_export_csv_writes_file(tmp_path: Path) -> None:
+    config = make_config(tmp_path)
+    run_cli(["add", "Buy milk"], config)
+    out_path = tmp_path / "out.csv"
+
+    run_cli(["export", "--format", "csv", "--out", str(out_path)], config)
+
+    assert out_path.exists()
+    assert "Buy milk" in out_path.read_text()
+
+
+def test_import_json_creates_tasks_and_prints_count(tmp_path: Path, capsys) -> None:
+    config = make_config(tmp_path)
+    run_cli(["add", "Original task"], config)
+    export_path = tmp_path / "export.json"
+    run_cli(["export", "--format", "json", "--out", str(export_path)], config)
+
+    fresh_config = AppConfig(db_path=tmp_path / "fresh.db")
+    exit_code = run_cli(["import", "--format", "json", "--in", str(export_path)], fresh_config)
+
+    assert exit_code == 0
+    assert "Imported 1 task(s)" in capsys.readouterr().out
+    tasks = _read_tasks(fresh_config)
+    assert tasks[0].title == "Original task"

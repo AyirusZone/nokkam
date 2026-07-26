@@ -9,10 +9,12 @@ HELP_TEXT = """\
 [bold $accent]cad — keybindings[/]
 
 [bold]Home (calendar + tasks)[/]
-  tab        cycle focus: calendar / today's tasks / all tasks
+  tab        cycle focus: calendar / today's tasks / Projects-Tags-All tabs
+  left/right switch Projects / Tags / All Tasks tabs (tab bar focused)
   h/j/k/l    move (day+week in calendar, line in a task list)
   [[ / ]]    prev / next month
   t          jump to today (calendar focused) or start/stop timer (task focused)
+  p          pause/resume the running timer
   a          add task (defaults to selected day if calendar/day-pane focused)
   e          edit selected task
   d          delete selected task
@@ -23,6 +25,7 @@ HELP_TEXT = """\
   w          open agenda (next 14 days)
   S          open stats
   P          open Pomodoro (25/5 focus timer)
+  R          sync configured .ics calendars now
 
 [bold]Command palette[/]
   ctrl+k     open palette — fuzzy-search tasks to jump to them,

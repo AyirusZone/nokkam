@@ -8,7 +8,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Label, Select, Static
+from textual.widgets import Button, Checkbox, Input, Label, Select, Static
 from textual.widgets.select import NoSelection
 
 from cad_tui.domain.models import Priority, Task
@@ -33,6 +33,7 @@ class TaskFormResult:
     tag_names: list[str]
     recurrence: str
     blocked_by_title: str | None
+    private: bool
 
 
 class TaskFormModal(ModalScreen[TaskFormResult | None]):
@@ -92,7 +93,10 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
                 yield Input(value=self._tag_names, id="tags", placeholder="home, urgent")
             yield Label("Blocked by (task title)")
             yield Input(value=self._blocked_by_title, id="blocked_by", placeholder="Optional")
-            with Horizontal():
+            yield Checkbox(
+                "Private (mask title in lists)", value=t.private if t else False, id="private"
+            )
+            with Horizontal(classes="form-actions"):
                 yield Button("Save", variant="primary", id="save")
                 yield Button("Cancel", id="cancel")
 
@@ -116,6 +120,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         assert not isinstance(priority, NoSelection)
         assert not isinstance(recurrence, NoSelection)
         blocked_by_title = self.query_one("#blocked_by", Input).value.strip() or None
+        private = self.query_one("#private", Checkbox).value
 
         self.dismiss(
             TaskFormResult(
@@ -128,6 +133,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
                 tag_names=tag_names,
                 recurrence=recurrence,
                 blocked_by_title=blocked_by_title,
+                private=private,
             )
         )
 

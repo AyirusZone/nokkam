@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, ListView
+from textual.widgets import Footer, ListView, Static
 
 from cad_tui.domain.models import Status, Task
 from cad_tui.presentation.screens.help import HelpModal
@@ -35,7 +36,9 @@ class AgendaScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield AppHeader(subtitle="agenda", meta=f"next {AGENDA_DAYS} days")
-        yield ListView(id="agenda-list")
+        with Vertical(id="agenda-pane"):
+            yield Static("Upcoming", classes="accent-text")
+            yield ListView(id="agenda-list")
         yield Footer()
 
     def on_mount(self) -> None:

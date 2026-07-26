@@ -36,6 +36,7 @@ class Task:
     updated_at: str | None = None
     completed_at: str | None = None
     tag_ids: list[int] = field(default_factory=list)
+    private: bool = False
 
 
 @dataclass
@@ -51,3 +52,29 @@ class Tag:
     name: str
     id: int | None = None
     color: str = "#8E8E93"
+
+
+@dataclass
+class CalendarSource:
+    """One configured read-only .ics feed (see AppConfig.ics_sources)."""
+
+    name: str
+    id: int | None = None
+    color: str = "#0A84FF"
+    source: str = "ics-import"
+
+
+@dataclass
+class Event:
+    """A read-only calendar event synced in from an .ics source — never
+    created or edited from within cad-tui itself."""
+
+    title: str
+    start_at: str
+    id: int | None = None
+    end_at: str | None = None
+    all_day: bool = False
+    calendar_id: int | None = None
+    location: str | None = None
+    notes: str | None = None
+    uid: str | None = None

@@ -22,7 +22,11 @@ _DARK = {
     "panel": "#1F1F24",  # second elevation — modals, overlays
     "foreground": "#EDEDEF",  # soft off-white, not #FFF
     "warning": "#E8A33D",
-    "error": "#FF5F57",
+    # A crimson/rose hue, deliberately apart from the accent's own
+    # red-orange — the two used to sit ~8° apart on the hue wheel, which
+    # made a selected+high-priority row read as "this failed" instead of
+    # "this is selected and urgent."
+    "error": "#FF3B5C",
     "success": "#32D74A",
     "secondary": "#6E7BFF",
 }
@@ -33,7 +37,7 @@ _LIGHT = {
     "panel": "#EDEBE6",
     "foreground": "#1C1B1A",  # warm near-black
     "warning": "#B9791F",
-    "error": "#D6373A",
+    "error": "#D6294F",
     "success": "#1AA251",
     "secondary": "#4B54D6",
 }

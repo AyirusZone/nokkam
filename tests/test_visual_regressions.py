@@ -84,6 +84,34 @@ async def test_header_and_footer_visible_in_full_render(tmp_path: Path) -> None:
         assert "home" in joined
 
 
+async def test_day_pane_stays_visible_on_short_terminal(tmp_path: Path) -> None:
+    """#calendar used `height: auto`, which claims a full ~27-row month
+    grid regardless of the container's actual space. Textual gives
+    auto-height siblings their full request before 1fr siblings get
+    anything, so on a short terminal #day-pane's `height: 1fr` was
+    squeezed to zero and the whole day pane vanished."""
+    app = make_app(tmp_path)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        day_pane = app.screen.query_one("#day-pane")
+        assert day_pane.size.height > 0
+
+
+async def test_day_cell_keeps_readable_width_on_narrow_terminal(tmp_path: Path) -> None:
+    """#filter-tabs used a fixed `width: 40`, which on a narrow terminal
+    left #main-pane (and its 7-column day grid) so little room that a
+    day cell's border-left consumed its entire remaining content width,
+    collapsing it to 1 column — wide enough to draw a border but not the
+    day number or task preview inside it."""
+    from cad_tui.presentation.widgets.calendar_grid import DayCell
+
+    app = make_app(tmp_path)
+    async with app.run_test(size=(70, 30)) as pilot:
+        await pilot.pause()
+        today_cell = next(c for c in app.screen.query(DayCell) if "today" in c.classes)
+        assert today_cell.size.width >= 3
+
+
 async def test_task_row_badge_uses_theme_color_not_default_foreground(tmp_path: Path) -> None:
     from cad_tui.domain.recurrence import RecurrenceRule
     from cad_tui.presentation.screens.task_list import TaskRow

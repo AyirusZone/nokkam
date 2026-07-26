@@ -116,6 +116,19 @@ MIGRATIONS: list[tuple[int, str]] = [
         );
         """,
     ),
+    (
+        3,
+        """
+        ALTER TABLE task ADD COLUMN private INTEGER NOT NULL DEFAULT 0;
+
+        -- One row per configured .ics source (see AppConfig.ics_sources).
+        -- `uid` is the ICS UID:PROP value, used to upsert on refresh instead
+        -- of accumulating duplicates; NULL is only possible for a
+        -- hypothetical future local (non-imported) event.
+        ALTER TABLE event ADD COLUMN uid TEXT;
+        CREATE UNIQUE INDEX idx_event_calendar_uid ON event(calendar_id, uid);
+        """,
+    ),
 ]
 
 
