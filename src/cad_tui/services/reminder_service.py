@@ -24,7 +24,7 @@ class ReminderService:
         horizon = now + timedelta(minutes=window_minutes)
         newly_due: list[Task] = []
         for task in self.task_service.list_tasks(status=Status.OPEN):
-            if not task.due_date:
+            if not task.due_date or task.id is None:
                 continue
             try:
                 due_dt = datetime.fromisoformat(f"{task.due_date}T{task.due_time or '00:00'}")

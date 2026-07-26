@@ -18,7 +18,9 @@ async def test_agenda_lists_only_next_14_days_sorted(tmp_path: Path) -> None:
         app.task_service.add_task(
             Task(title="Far future", due_date=(today + timedelta(days=20)).isoformat())
         )
-        app.task_service.add_task(Task(title="Day 5", due_date=(today + timedelta(days=5)).isoformat()))
+        app.task_service.add_task(
+            Task(title="Day 5", due_date=(today + timedelta(days=5)).isoformat())
+        )
         app.task_service.add_task(Task(title="Today", due_date=today.isoformat()))
         app.task_service.add_task(Task(title="No date"))
 

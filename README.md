@@ -1,5 +1,11 @@
 # cad
 
+[![CI](https://github.com/AyirusZone/cad_tui/actions/workflows/ci.yml/badge.svg)](https://github.com/AyirusZone/cad_tui/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/cad-tui.svg)](https://pypi.org/project/cad-tui/)
+[![Python versions](https://img.shields.io/pypi/pyversions/cad-tui.svg)](https://pypi.org/project/cad-tui/)
+[![Downloads](https://img.shields.io/pypi/dm/cad-tui.svg)](https://pypi.org/project/cad-tui/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A calcurse-inspired terminal task manager and calendar. Calendar and tasks
 live side by side on one home screen — no mode-switching to see what's due.
 Local-first: everything lives in a single SQLite file, nothing leaves your
@@ -200,13 +206,80 @@ Nothing needs to be set — these are the defaults if the file is absent.
 ## Development
 
 ```bash
+git clone https://github.com/AyirusZone/cad_tui.git
+cd cad_tui
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e ".[dev]"
-pytest
+pre-commit install
 ```
 
 The app is layered (`presentation` → `services` → `domain` → `data`/`infra`)
 so business logic stays independent of the Textual UI. See commit history
 for the phase-by-phase build log.
+
+### Testing
+
+```bash
+pytest
+pytest --cov=cad_tui --cov-report=term-missing --cov-report=xml --cov-report=html
+```
+
+### Linting
+
+```bash
+ruff check src tests
+```
+
+### Formatting
+
+```bash
+black --check src tests   # verify
+black src tests           # apply
+```
+
+### Type checking
+
+```bash
+mypy src
+```
+
+### Packaging
+
+```bash
+python -m build
+twine check dist/*
+```
+
+## Versioning
+
+cad-tui follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+Development releases use a PEP 440 dev suffix, e.g. `0.5.0.dev1`; stable
+releases drop it, e.g. `0.5.0`. See [CHANGELOG.md](CHANGELOG.md) for the
+version history.
+
+## Release process
+
+Releases are fully automated by CI once a tag is pushed — nothing is
+published from a developer's machine.
+
+| Branch        | Tag             | Publishes to | GitHub artifact  |
+|---------------|-----------------|--------------|------------------|
+| `development` | `dev-vX.Y.Z`    | TestPyPI     | Pre-release      |
+| `master`      | `vX.Y.Z`        | PyPI         | Release          |
+
+Each tag push runs: validate the tag matches the `pyproject.toml` version →
+build → test → publish → create the GitHub release/pre-release with the
+wheel and sdist attached. A version/tag mismatch fails the workflow before
+anything is published. Maintainers: see the repository's release runbook
+for the manual tagging steps.
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for the
+branch strategy, dev setup, and pull request checklist. Please also review
+the [Code of Conduct](CODE_OF_CONDUCT.md). To report a security issue, see
+[SECURITY.md](SECURITY.md) instead of opening a public issue.
 
 ## License
 

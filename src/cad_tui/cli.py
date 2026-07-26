@@ -13,7 +13,13 @@ from cad_tui.data.repositories.tag_repository import TagRepository
 from cad_tui.data.repositories.task_repository import TaskRepository
 from cad_tui.domain.models import Priority, Task
 from cad_tui.domain.nl_date_parser import parse_quick_text
-from cad_tui.infra.export_adapter import export_csv, export_ics, export_json, import_csv, import_json
+from cad_tui.infra.export_adapter import (
+    export_csv,
+    export_ics,
+    export_json,
+    import_csv,
+    import_json,
+)
 
 _PRIORITY_MAP = {"high": Priority.HIGH, "medium": Priority.MEDIUM, "low": Priority.LOW}
 
@@ -68,7 +74,9 @@ def run_cli(argv: list[str], config: AppConfig | None = None) -> int:
         conn.close()
 
 
-def _cmd_add(args, task_repo: TaskRepository, project_repo: ProjectRepository, tag_repo: TagRepository) -> int:
+def _cmd_add(
+    args, task_repo: TaskRepository, project_repo: ProjectRepository, tag_repo: TagRepository
+) -> int:
     parsed = parse_quick_text(args.text)
     due_date = args.due or parsed.due_date
     task = Task(

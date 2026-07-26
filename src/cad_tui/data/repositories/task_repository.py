@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Sequence
 
 from cad_tui.domain.models import Task
 
 _COLUMNS = (
-    "title", "notes", "project_id", "priority", "status", "due_date",
-    "due_time", "estimate_min", "actual_min", "parent_task_id",
+    "title",
+    "notes",
+    "project_id",
+    "priority",
+    "status",
+    "due_date",
+    "due_time",
+    "estimate_min",
+    "actual_min",
+    "parent_task_id",
     "recurrence_id",
 )
 
@@ -25,6 +34,7 @@ class TaskRepository:
                 tuple(getattr(task, c) for c in _COLUMNS),
             )
             task_id = cur.lastrowid
+            assert task_id is not None  # sqlite always assigns one on INSERT
             self._set_tags(task_id, task.tag_ids)
         return task_id
 
@@ -51,7 +61,8 @@ class TaskRepository:
             if fields:
                 set_clause = ", ".join(f"{k} = ?" for k in fields)
                 self.conn.execute(
-                    f"UPDATE task SET {set_clause}, updated_at = datetime('now', 'localtime') WHERE id = ?",
+                    f"UPDATE task SET {set_clause}, "
+                    "updated_at = datetime('now', 'localtime') WHERE id = ?",
                     (*fields.values(), task_id),
                 )
             if tag_ids is not None:
@@ -85,6 +96,7 @@ class TaskRepository:
 
     def restore(self, task: Task) -> int:
         """Re-insert a previously deleted task with its original id and tags (undo)."""
+        assert task.id is not None  # only ever called with a previously-persisted task
         with self.conn:
             self.conn.execute(
                 """INSERT INTO task
@@ -93,17 +105,28 @@ class TaskRepository:
                     reschedule_count, created_at, updated_at, completed_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    task.id, task.title, task.notes, task.project_id, task.priority,
-                    task.status, task.due_date, task.due_time, task.estimate_min,
-                    task.actual_min, task.parent_task_id, task.recurrence_id,
-                    task.reschedule_count, task.created_at, task.updated_at,
+                    task.id,
+                    task.title,
+                    task.notes,
+                    task.project_id,
+                    task.priority,
+                    task.status,
+                    task.due_date,
+                    task.due_time,
+                    task.estimate_min,
+                    task.actual_min,
+                    task.parent_task_id,
+                    task.recurrence_id,
+                    task.reschedule_count,
+                    task.created_at,
+                    task.updated_at,
                     task.completed_at,
                 ),
             )
             self._set_tags(task.id, task.tag_ids)
         return task.id
 
-    def _set_tags(self, task_id: int, tag_ids: list[int]) -> None:
+    def _set_tags(self, task_id: int, tag_ids: Sequence[int]) -> None:
         self.conn.execute("DELETE FROM task_tag WHERE task_id = ?", (task_id,))
         if tag_ids:
             self.conn.executemany(

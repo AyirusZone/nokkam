@@ -14,6 +14,7 @@ class ProjectRepository:
             cur = self.conn.execute(
                 "INSERT INTO project (name, color) VALUES (?, ?)", (name, color)
             )
+        assert cur.lastrowid is not None  # sqlite always assigns one on INSERT
         return cur.lastrowid
 
     def get(self, project_id: int) -> Project | None:

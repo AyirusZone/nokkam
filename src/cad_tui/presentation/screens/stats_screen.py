@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -16,10 +17,15 @@ from cad_tui.services.stats_service import (
     daily_completion_counts,
 )
 
+if TYPE_CHECKING:
+    from cad_tui.app import CadTuiApp
+
 BAR_WIDTH = 24
 
 
 class StatsScreen(Screen):
+    app: CadTuiApp
+
     BINDINGS = [Binding("escape,backspace", "back", "Back")]
 
     def compose(self) -> ComposeResult:
@@ -36,7 +42,8 @@ class StatsScreen(Screen):
         counts = daily_completion_counts(self.app.task_service, since)
         heatmap_lines = build_heatmap_lines(counts, weeks=HEATMAP_WEEKS)
         heatmap_block = "\n".join(
-            f"{label}  {line}" for label, line in zip(HEATMAP_WEEKDAY_LABELS, heatmap_lines)
+            f"{label}  {line}"
+            for label, line in zip(HEATMAP_WEEKDAY_LABELS, heatmap_lines, strict=True)
         )
 
         body = (

@@ -36,7 +36,9 @@ def export_json(tasks: list[Task], out_path: str, tag_repo: TagRepository | None
     Path(out_path).write_text(json.dumps(data, indent=2))
 
 
-def import_json(in_path: str, task_repo: TaskRepository, tag_repo: TagRepository | None = None) -> int:
+def import_json(
+    in_path: str, task_repo: TaskRepository, tag_repo: TagRepository | None = None
+) -> int:
     data = json.loads(Path(in_path).read_text())
     count = 0
     for item in data:
@@ -77,7 +79,9 @@ def export_csv(tasks: list[Task], out_path: str, tag_repo: TagRepository | None 
             )
 
 
-def import_csv(in_path: str, task_repo: TaskRepository, tag_repo: TagRepository | None = None) -> int:
+def import_csv(
+    in_path: str, task_repo: TaskRepository, tag_repo: TagRepository | None = None
+) -> int:
     count = 0
     with open(in_path, newline="") as f:
         reader = csv.DictReader(f)
@@ -118,6 +122,4 @@ def export_ics(tasks: list[Task], out_path: str) -> None:
 
 
 def _ics_escape(text: str) -> str:
-    return (
-        text.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", "\\n")
-    )
+    return text.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", "\\n")

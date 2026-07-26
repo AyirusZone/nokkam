@@ -32,7 +32,7 @@ def assert_close_color(actual_hex: str, expected_hex: str, tolerance: int = 3) -
     compare channels within a small tolerance rather than exact hex."""
     actual = _hex_to_rgb(actual_hex)
     expected = _hex_to_rgb(expected_hex)
-    diffs = [abs(a - e) for a, e in zip(actual, expected)]
+    diffs = [abs(a - e) for a, e in zip(actual, expected, strict=True)]
     assert all(d <= tolerance for d in diffs), f"{actual_hex} too far from {expected_hex}"
 
 

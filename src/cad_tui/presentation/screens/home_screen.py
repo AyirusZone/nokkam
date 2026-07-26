@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import calendar as calendar_mod
 from datetime import date, timedelta
+from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -25,8 +26,15 @@ from cad_tui.presentation.screens.task_list import TaskRow
 from cad_tui.presentation.widgets.app_header import AppHeader
 from cad_tui.presentation.widgets.calendar_grid import CalendarGrid, DayCell
 
+if TYPE_CHECKING:
+    from cad_tui.app import CadTuiApp
+
 
 class HomeScreen(Screen):
+    # Narrows self.app's type for mypy only (Textual's own `app` property is
+    # untouched at runtime — this is a bare annotation, not an assignment).
+    app: CadTuiApp
+
     BINDINGS = [
         Binding("left,h", "nav_left", "Left", show=False),
         Binding("right,l", "nav_right", "Right", show=False),
@@ -176,14 +184,14 @@ class HomeScreen(Screen):
         self.set_smart_filter(None)
         self.all_list.focus()
         for index, item in enumerate(self.all_list.children):
-            if item.model.id == task_id:
+            if isinstance(item, TaskRow) and item.model.id == task_id:
                 self.all_list.index = index
                 return
 
     @property
     def selected_task(self) -> Task | None:
         child = self._active_list().highlighted_child
-        return child.model if child is not None else None
+        return child.model if isinstance(child, TaskRow) else None
 
     # ---- navigation ----
     def _move_calendar(self, delta_days: int) -> None:
@@ -249,6 +257,7 @@ class HomeScreen(Screen):
                 recurrence_id=self._resolve_recurrence(result.recurrence, None),
             )
             created = self.app.task_service.add_task(task)
+            assert created.id is not None  # just persisted, must have an id
             self.app.task_service.set_blocked_by(
                 created.id, self._resolve_blocker(result.blocked_by_title)
             )
@@ -276,6 +285,7 @@ class HomeScreen(Screen):
                 parent_task_id=parent.id,
             )
             created = self.app.task_service.add_task(task)
+            assert created.id is not None  # just persisted, must have an id
             self.app.task_service.set_blocked_by(
                 created.id, self._resolve_blocker(result.blocked_by_title)
             )
@@ -297,19 +307,21 @@ class HomeScreen(Screen):
         task = self.selected_task
         if task is None:
             return
+        assert task.id is not None  # selected tasks always come from the repository
+        task_id = task.id
         project = self.app.project_repo.get(task.project_id) if task.project_id else None
         tags = self.app.tag_repo.get_many(task.tag_ids)
         recurrence_rule = (
             self.app.recurrence_repo.get(task.recurrence_id) if task.recurrence_id else None
         )
-        blocker_id = self.app.dependency_repo.get_blocker_id(task.id)
+        blocker_id = self.app.dependency_repo.get_blocker_id(task_id)
         blocker = self.app.task_repo.get(blocker_id) if blocker_id else None
 
         def on_result(result: TaskFormResult | None) -> None:
             if result is None:
                 return
             self.app.task_service.update_task(
-                task.id,
+                task_id,
                 title=result.title,
                 notes=result.notes,
                 priority=result.priority,
@@ -320,7 +332,7 @@ class HomeScreen(Screen):
                 recurrence_id=self._resolve_recurrence(result.recurrence, task.recurrence_id),
             )
             self.app.task_service.set_blocked_by(
-                task.id, self._resolve_blocker(result.blocked_by_title)
+                task_id, self._resolve_blocker(result.blocked_by_title)
             )
             self.refresh_all()
 
@@ -339,6 +351,7 @@ class HomeScreen(Screen):
         task = self.selected_task
         if task is None:
             return
+        assert task.id is not None  # selected tasks always come from the repository
         self.app.task_service.delete_task(task.id)
         self.refresh_all()
 
@@ -346,6 +359,7 @@ class HomeScreen(Screen):
         task = self.selected_task
         if task is None:
             return
+        assert task.id is not None  # selected tasks always come from the repository
         if task.status == Status.OPEN and self.app.task_service.is_blocked(task.id):
             blocker_id = self.app.dependency_repo.get_blocker_id(task.id)
             blocker = self.app.task_repo.get(blocker_id) if blocker_id else None
@@ -360,6 +374,7 @@ class HomeScreen(Screen):
         task = self.selected_task
         if task is None:
             return
+        assert task.id is not None  # selected tasks always come from the repository
         running = self.app.time_tracking.toggle(task.id)
         self.refresh_all()
         self.notify(f"Timer {'started' if running else 'stopped'}: {task.title}")

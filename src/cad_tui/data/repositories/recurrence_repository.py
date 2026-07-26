@@ -15,6 +15,7 @@ class RecurrenceRepository:
                 "INSERT INTO recurrence (rule, interval, until, count) VALUES (?, ?, ?, ?)",
                 (rule.rule, rule.interval, rule.until, rule.count),
             )
+        assert cur.lastrowid is not None  # sqlite always assigns one on INSERT
         return cur.lastrowid
 
     def get(self, recurrence_id: int) -> RecurrenceRule | None:

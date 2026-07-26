@@ -22,7 +22,7 @@ def send_notification(message: str, title: str = "cad-tui") -> bool:
             return _notify_linux(message, title)
         if sys.platform == "win32":
             return _notify_windows(message, title)
-    except Exception:
+    except Exception:  # noqa: BLE001 - best-effort notification, must never crash the app
         return False
     return False
 
@@ -32,14 +32,18 @@ def _notify_macos(message: str, title: str) -> bool:
         f"display notification {_applescript_escape(message)} "
         f"with title {_applescript_escape(title)}"
     )
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, timeout=5)
+    result = subprocess.run(
+        ["osascript", "-e", script], capture_output=True, timeout=5, check=False
+    )
     return result.returncode == 0
 
 
 def _notify_linux(message: str, title: str) -> bool:
     if shutil.which("notify-send") is None:
         return False
-    result = subprocess.run(["notify-send", title, message], capture_output=True, timeout=5)
+    result = subprocess.run(
+        ["notify-send", title, message], capture_output=True, timeout=5, check=False
+    )
     return result.returncode == 0
 
 
@@ -61,6 +65,7 @@ def _notify_windows(message: str, title: str) -> bool:
         ["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
         capture_output=True,
         timeout=8,
+        check=False,
     )
     return result.returncode == 0
 

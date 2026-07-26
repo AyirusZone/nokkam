@@ -4,8 +4,16 @@ from cad_tui.data.db import connect
 from cad_tui.data.migrations import apply_migrations
 
 EXPECTED_TABLES = {
-    "project", "tag", "recurrence", "task", "task_tag",
-    "calendar", "event", "time_log", "reminder", "usage_log",
+    "project",
+    "tag",
+    "recurrence",
+    "task",
+    "task_tag",
+    "calendar",
+    "event",
+    "time_log",
+    "reminder",
+    "usage_log",
     "task_dependency",
 }
 
@@ -15,10 +23,9 @@ def test_migrations_create_expected_schema(tmp_path: Path) -> None:
     apply_migrations(conn)
 
     tables = {
-        row["name"]
-        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        row["name"] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
     }
-    assert EXPECTED_TABLES <= tables
+    assert tables >= EXPECTED_TABLES
     conn.close()
 
 

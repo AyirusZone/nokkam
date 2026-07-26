@@ -9,6 +9,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select, Static
+from textual.widgets.select import NoSelection
 
 from cad_tui.domain.models import Priority, Task
 
@@ -111,6 +112,9 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         project_name = self.query_one("#project", Input).value.strip() or None
         tag_names = [t for t in self.query_one("#tags", Input).value.split(",") if t.strip()]
         recurrence = self.query_one("#recurrence", Select).value
+        # allow_blank=False on both Selects guarantees a real value, never NoSelection.
+        assert not isinstance(priority, NoSelection)
+        assert not isinstance(recurrence, NoSelection)
         blocked_by_title = self.query_one("#blocked_by", Input).value.strip() or None
 
         self.dismiss(

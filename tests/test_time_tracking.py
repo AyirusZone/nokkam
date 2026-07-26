@@ -67,7 +67,5 @@ def test_start_at_uses_local_date_not_utc(tmp_path: Path) -> None:
     service.toggle(task_id)
 
     conn = service.repo.conn
-    row = conn.execute(
-        "SELECT start_at FROM time_log WHERE task_id = ?", (task_id,)
-    ).fetchone()
+    row = conn.execute("SELECT start_at FROM time_log WHERE task_id = ?", (task_id,)).fetchone()
     assert row["start_at"][:10] == date.today().isoformat()

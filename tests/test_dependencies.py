@@ -12,7 +12,9 @@ from cad_tui.services.undo import UndoStack
 def make_service(db_path: Path) -> TaskService:
     conn = connect(db_path)
     apply_migrations(conn)
-    return TaskService(TaskRepository(conn), UndoStack(), dependency_repo=DependencyRepository(conn))
+    return TaskService(
+        TaskRepository(conn), UndoStack(), dependency_repo=DependencyRepository(conn)
+    )
 
 
 def test_task_with_open_blocker_is_blocked(tmp_path: Path) -> None:

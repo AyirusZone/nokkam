@@ -13,12 +13,14 @@ class TimeLogRepository:
                 "INSERT INTO time_log (task_id, start_at) VALUES (?, datetime('now', 'localtime'))",
                 (task_id,),
             )
+        assert cur.lastrowid is not None  # sqlite always assigns one on INSERT
         return cur.lastrowid
 
     def stop(self, time_log_id: int) -> None:
         with self.conn:
             self.conn.execute(
-                "UPDATE time_log SET end_at = datetime('now', 'localtime') WHERE id = ?", (time_log_id,)
+                "UPDATE time_log SET end_at = datetime('now', 'localtime') WHERE id = ?",
+                (time_log_id,),
             )
 
     def active_for_task(self, task_id: int) -> int | None:
@@ -30,7 +32,8 @@ class TimeLogRepository:
     def total_minutes_for_task(self, task_id: int) -> int:
         row = self.conn.execute(
             """SELECT COALESCE(SUM(
-                   (julianday(COALESCE(end_at, datetime('now', 'localtime'))) - julianday(start_at)) * 24 * 60
+                   (julianday(COALESCE(end_at, datetime('now', 'localtime')))
+                    - julianday(start_at)) * 24 * 60
                ), 0) AS minutes
                FROM time_log WHERE task_id = ?""",
             (task_id,),

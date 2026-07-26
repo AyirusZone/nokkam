@@ -48,7 +48,13 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
     "pytest-textual-snapshot>=1.0",
+    "pytest-cov>=5.0",
     "build>=1.2",
+    "twine>=5.0",
+    "ruff>=0.6",
+    "black>=24.0",
+    "mypy>=1.11",
+    "readme-renderer[md]>=44.0",
 ]
 
 [build-system]
@@ -64,3 +70,47 @@ cad_tui = ["presentation/styles/*.tcss"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["cad_tui"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "def __repr__",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "PLW", "PLE", "BLE", "RUF", "DTZ"]
+ignore = [
+    # DTZ001/DTZ005/DTZ011: this is a local-only, single-user app — naive
+    # local-time datetime/date usage throughout is intentional, not a bug.
+    "DTZ001",
+    "DTZ005",
+    "DTZ011",
+    # RUF012: Textual's own convention is a plain mutable class attribute for
+    # BINDINGS; annotating it as ClassVar on every screen/widget buys nothing.
+    "RUF012",
+    # SIM117: nested `with` blocks (e.g. mock.patch chains in tests) are kept
+    # separate deliberately for readability.
+    "SIM117",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312", "py313"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true

@@ -12,13 +12,24 @@ from datetime import date, timedelta
 
 _RELATIVE_DAYS = {"today": 0, "tomorrow": 1, "tmrw": 1, "tmw": 1}
 _WEEKDAYS = {
-    "monday": 0, "mon": 0,
-    "tuesday": 1, "tues": 1, "tue": 1,
-    "wednesday": 2, "weds": 2, "wed": 2,
-    "thursday": 3, "thurs": 3, "thur": 3, "thu": 3,
-    "friday": 4, "fri": 4,
-    "saturday": 5, "sat": 5,
-    "sunday": 6, "sun": 6,
+    "monday": 0,
+    "mon": 0,
+    "tuesday": 1,
+    "tues": 1,
+    "tue": 1,
+    "wednesday": 2,
+    "weds": 2,
+    "wed": 2,
+    "thursday": 3,
+    "thurs": 3,
+    "thur": 3,
+    "thu": 3,
+    "friday": 4,
+    "fri": 4,
+    "saturday": 5,
+    "sat": 5,
+    "sunday": 6,
+    "sun": 6,
 }
 
 _ISO_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
@@ -44,7 +55,7 @@ def parse_quick_text(text: str, *, today: date | None = None) -> QuickAddResult:
 
     def _cut(match: re.Match) -> None:
         nonlocal remaining
-        remaining = remaining[: match.start()] + remaining[match.end():]
+        remaining = remaining[: match.start()] + remaining[match.end() :]
 
     due_date: str | None = None
     if match := _ISO_DATE_RE.search(remaining):

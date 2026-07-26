@@ -3,21 +3,26 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Footer, ListView
 
-from cad_tui.domain.models import Status
+from cad_tui.domain.models import Status, Task
 from cad_tui.presentation.screens.help import HelpModal
 from cad_tui.presentation.screens.task_list import TaskRow
 from cad_tui.presentation.widgets.app_header import AppHeader
+
+if TYPE_CHECKING:
+    from cad_tui.app import CadTuiApp
 
 AGENDA_DAYS = 14
 
 
 class AgendaScreen(Screen):
+    app: CadTuiApp
     BINDINGS = [
         Binding("space", "toggle_complete", "Toggle done"),
         Binding("d", "delete_task", "Delete"),
@@ -58,9 +63,9 @@ class AgendaScreen(Screen):
             list_view.index = index
 
     @property
-    def selected_task(self):
+    def selected_task(self) -> Task | None:
         child = self.list_view.highlighted_child
-        return child.model if child is not None else None
+        return child.model if isinstance(child, TaskRow) else None
 
     def action_cursor_down(self) -> None:
         self.list_view.action_cursor_down()
@@ -72,6 +77,7 @@ class AgendaScreen(Screen):
         task = self.selected_task
         if task is None:
             return
+        assert task.id is not None  # selected tasks always come from the repository
         index = self.list_view.index
         self.app.task_service.toggle_complete(task.id)
         self.refresh_agenda(select_index=index)
@@ -80,6 +86,7 @@ class AgendaScreen(Screen):
         task = self.selected_task
         if task is None:
             return
+        assert task.id is not None  # selected tasks always come from the repository
         index = self.list_view.index
         self.app.task_service.delete_task(task.id)
         self.refresh_agenda(select_index=index)

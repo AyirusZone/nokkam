@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 import sys
-from typing import Iterable
+from collections.abc import Iterable
 
 from textual.app import App, SystemCommand
 from textual.screen import Screen
@@ -97,7 +97,7 @@ class CadTuiApp(App):
         yield from super().get_system_commands(screen)
         yield SystemCommand("Add task", "Create a new task", self._cmd_add_task)
         yield SystemCommand(
-            "Quick add", "Fast capture, e.g. \"Buy milk tmrw 3pm\"", self._cmd_quick_add
+            "Quick add", 'Fast capture, e.g. "Buy milk tmrw 3pm"', self._cmd_quick_add
         )
         yield SystemCommand("Undo", "Undo the last action", self._cmd_undo)
         yield SystemCommand(
@@ -106,12 +106,8 @@ class CadTuiApp(App):
         yield SystemCommand(
             "Open agenda", "Rolling 14-day agenda of upcoming tasks", self._cmd_open_agenda
         )
-        yield SystemCommand(
-            "Show stats", "Completion rate and streak", self._cmd_open_stats
-        )
-        yield SystemCommand(
-            "Pomodoro", "Start a 25/5 focus timer", self.action_open_pomodoro
-        )
+        yield SystemCommand("Show stats", "Completion rate and streak", self._cmd_open_stats)
+        yield SystemCommand("Pomodoro", "Start a 25/5 focus timer", self.action_open_pomodoro)
         yield SystemCommand(
             "Smart list: Today", "Show only tasks due today", lambda: self._cmd_smart_list("today")
         )
@@ -126,7 +122,9 @@ class CadTuiApp(App):
             lambda: self._cmd_smart_list("week"),
         )
         yield SystemCommand(
-            "Smart list: All tasks", "Clear the smart-list filter", lambda: self._cmd_smart_list(None)
+            "Smart list: All tasks",
+            "Clear the smart-list filter",
+            lambda: self._cmd_smart_list(None),
         )
 
     def _goto_home(self) -> HomeScreen:

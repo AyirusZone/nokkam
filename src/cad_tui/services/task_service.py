@@ -67,10 +67,13 @@ class TaskService:
     def add_task(self, task: Task) -> Task:
         task_id = self.repo.create(task)
         self.undo.push(f"add '{task.title}'", lambda: self.repo.delete(task_id))
-        return self.repo.get(task_id)
+        created = self.repo.get(task_id)
+        assert created is not None  # just created, must exist
+        return created
 
     def update_task(self, task_id: int, **fields) -> Task:
         previous = self.repo.get(task_id)
+        assert previous is not None  # caller must pass an existing task's id
         self.repo.update(task_id, **fields)
 
         def _undo() -> None:
@@ -78,16 +81,22 @@ class TaskService:
             self.repo.update(task_id, **restore)
 
         self.undo.push(f"edit '{previous.title}'", _undo)
-        return self.repo.get(task_id)
+        updated = self.repo.get(task_id)
+        assert updated is not None  # just updated, must exist
+        return updated
 
     def delete_task(self, task_id: int) -> None:
         task = self.repo.get(task_id)
         if task is None:
             return
         self.repo.delete(task_id)
-        self.undo.push(f"delete '{task.title}'", lambda: self.repo.restore(task))
 
-    def toggle_complete(self, task_id: int) -> Task:
+        def _undo() -> None:
+            self.repo.restore(task)
+
+        self.undo.push(f"delete '{task.title}'", _undo)
+
+    def toggle_complete(self, task_id: int) -> Task | None:
         task = self.repo.get(task_id)
         if task is None:
             return None
@@ -122,9 +131,7 @@ class TaskService:
                 return None
 
         base_date = (
-            date.fromisoformat(completed_task.due_date)
-            if completed_task.due_date
-            else date.today()
+            date.fromisoformat(completed_task.due_date) if completed_task.due_date else date.today()
         )
         nxt = next_occurrence(base_date, rule)
         if nxt is None:

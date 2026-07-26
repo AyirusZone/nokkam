@@ -2,17 +2,25 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import ModalScreen
+from textual.timer import Timer
 from textual.widgets import Static
+
+if TYPE_CHECKING:
+    from cad_tui.app import CadTuiApp
 
 WORK_SECONDS = 25 * 60
 BREAK_SECONDS = 5 * 60
 
 
 class PomodoroScreen(ModalScreen[None]):
+    app: CadTuiApp
+
     BINDINGS = [
         Binding("space", "toggle_pause", "Pause/Resume"),
         Binding("r", "reset", "Reset"),
@@ -24,7 +32,7 @@ class PomodoroScreen(ModalScreen[None]):
         self.remaining = WORK_SECONDS
         self.on_break = False
         self.paused = False
-        self._timer = None
+        self._timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
         with Vertical(classes="panel", id="pomodoro-panel"):

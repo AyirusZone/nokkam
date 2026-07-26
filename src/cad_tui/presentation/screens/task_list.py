@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from textual.app import ComposeResult
 from textual.widgets import ListItem, Static
 
 from cad_tui.domain.models import Priority, Status, Task
 
-PRIORITY_CLASS = {
+if TYPE_CHECKING:
+    from cad_tui.app import CadTuiApp
+
+# Keyed by plain int (not Priority) since Task.priority is a plain int field;
+# Priority is an IntEnum so the values still compare equal at runtime.
+PRIORITY_CLASS: dict[int, str] = {
     Priority.HIGH: "priority-high",
     Priority.MEDIUM: "priority-medium",
     Priority.LOW: "priority-low",
@@ -15,12 +22,15 @@ PRIORITY_CLASS = {
 
 
 class TaskRow(ListItem):
+    app: CadTuiApp
+
     def __init__(self, task: Task, depth: int = 0) -> None:
         super().__init__(classes=PRIORITY_CLASS.get(task.priority, "priority-medium"))
         self.model = task
         self.depth = depth
 
     def compose(self) -> ComposeResult:
+        assert self.model.id is not None  # rows are only ever built from persisted tasks
         done = self.model.status == Status.DONE
         indent = "  " * self.depth
         check = "[$success]✓[/] " if done else "  "

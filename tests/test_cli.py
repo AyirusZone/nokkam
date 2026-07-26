@@ -42,7 +42,16 @@ def test_add_explicit_due_overrides_parsed_date(tmp_path: Path) -> None:
 def test_add_with_priority_project_tags(tmp_path: Path) -> None:
     config = make_config(tmp_path)
     run_cli(
-        ["add", "Ship release", "--priority", "high", "--project", "Work", "--tags", "urgent,release"],
+        [
+            "add",
+            "Ship release",
+            "--priority",
+            "high",
+            "--project",
+            "Work",
+            "--tags",
+            "urgent,release",
+        ],
         config,
     )
 

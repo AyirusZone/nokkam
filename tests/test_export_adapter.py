@@ -5,7 +5,13 @@ from cad_tui.data.migrations import apply_migrations
 from cad_tui.data.repositories.tag_repository import TagRepository
 from cad_tui.data.repositories.task_repository import TaskRepository
 from cad_tui.domain.models import Task
-from cad_tui.infra.export_adapter import export_csv, export_ics, export_json, import_csv, import_json
+from cad_tui.infra.export_adapter import (
+    export_csv,
+    export_ics,
+    export_json,
+    import_csv,
+    import_json,
+)
 
 
 def setup_repo(db_path: Path):

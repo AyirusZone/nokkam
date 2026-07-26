@@ -3,8 +3,8 @@ pushes a closure that reverses it; undo() pops and runs the most recent one."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 
 @dataclass
