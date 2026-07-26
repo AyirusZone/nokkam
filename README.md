@@ -14,20 +14,32 @@ machine.
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ cad / home                                        July 2026  │
-├─────────────────┬──────────────────────────────────────────┤
-│  mo tu we th fr  │ Saturday, 25 July 2026                    │
-│  sa su           │    Design system spec        2026-07-25  │
-│                  │    Standup              2026-07-25 09:00 │
-│  29 30  1  2  3  │ ────────────────────────────────────────  │
-│   4  5▓ 6  7  8  │ All tasks                                 │
-│   9 10 11 12 13  │    Design system spec        2026-07-25  │
-│  ...             │    Standup              2026-07-25 09:00 │
-│                  │    Weekly review             2026-07-28  │
-│                  │    Read newsletter                        │
-├─────────────────┴──────────────────────────────────────────┤
-│ [ Prev  ] Next  t Today/Timer  a Add  e Edit  d Delete  ...  │
+├─────────────────┬────────────────────────────────────────────┤
+│ mo tu we th fr  │ Saturday, 25 July 2026                     │
+│ sa su           │    Design system spec        2026-07-25    │
+│                 │    Standup              2026-07-25 09:00   │
+│ 29 30  1  2  3  │ ────────────────────────────────────────── │
+│  4  5▓ 6  7  8  │ All tasks                                  │
+│  9 10 11 12 13  │    Design system spec        2026-07-25    │
+│ ...             │    Standup              2026-07-25 09:00   │
+│                 │    Weekly review             2026-07-28    │
+│                 │    Read newsletter                         │
+├─────────────────┴────────────────────────────────────────────┤
+│ [ Prev ]  Next  t Today/Timer  a Add  e Edit  d Delete ...   │
 └──────────────────────────────────────────────────────────────┘
 ```
+
+## Contents
+
+- [Features](#features)
+- [Install](#install)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Versioning](#versioning)
+- [Release process](#release-process)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Features
 
