@@ -10,28 +10,31 @@ import re
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-_RELATIVE_DAYS = {"today": 0, "tomorrow": 1, "tmrw": 1, "tmw": 1}
-_WEEKDAYS = {
-    "monday": 0,
-    "mon": 0,
-    "tuesday": 1,
-    "tues": 1,
-    "tue": 1,
-    "wednesday": 2,
-    "weds": 2,
-    "wed": 2,
-    "thursday": 3,
-    "thurs": 3,
-    "thur": 3,
-    "thu": 3,
-    "friday": 4,
-    "fri": 4,
-    "saturday": 5,
-    "sat": 5,
-    "sunday": 6,
-    "sun": 6,
-}
+from nokkam.domain.recurrence import (
+    ORDINALS,
+    WEEKDAY_ALIASES,
+    RecurrenceError,
+    RecurrenceRule,
+    first_occurrence,
+    parse_recurrence,
+)
 
+_RELATIVE_DAYS = {"today": 0, "tomorrow": 1, "tmrw": 1, "tmw": 1}
+_WEEKDAYS = WEEKDAY_ALIASES
+
+_DAY_NAMES = "|".join(sorted(WEEKDAY_ALIASES, key=len, reverse=True))
+_DAY_LIST = rf"(?:{_DAY_NAMES})(?:(?:\s*,\s*|\s+and\s+)(?:{_DAY_NAMES}))*"
+# "every day", "every 2 weeks on mon,thu", "every weekday", "every fri",
+# "every first tue", optionally followed by "until <date>" / "for N times".
+_RECURRENCE_RE = re.compile(
+    r"\bevery\s+(?:"
+    rf"(?:other\s+|\d+\s+)?(?:days?|weeks?|months?|years?|weekdays?|weekends?)"
+    rf"(?:\s+on\s+{_DAY_LIST})?"
+    rf"|(?:{'|'.join(ORDINALS)})\s+(?:{_DAY_NAMES})(?:\s+of\s+(?:the|every)\s+month)?"
+    rf"|{_DAY_LIST}"
+    r")(?:\s+until\s+\d{4}-\d{2}-\d{2})?(?:\s+for\s+\d+\s+times?)?\b",
+    re.IGNORECASE,
+)
 _ISO_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 _IN_N_RE = re.compile(r"\bin\s+(\d+)\s+(day|days|week|weeks)\b", re.IGNORECASE)
 _RELATIVE_RE = re.compile(r"\b(" + "|".join(_RELATIVE_DAYS) + r")\b", re.IGNORECASE)
@@ -47,6 +50,7 @@ class QuickAddResult:
     title: str
     due_date: str | None
     due_time: str | None
+    recurrence: RecurrenceRule | None = None
 
 
 def parse_quick_text(text: str, *, today: date | None = None) -> QuickAddResult:
@@ -56,6 +60,15 @@ def parse_quick_text(text: str, *, today: date | None = None) -> QuickAddResult:
     def _cut(match: re.Match) -> None:
         nonlocal remaining
         remaining = remaining[: match.start()] + remaining[match.end() :]
+
+    recurrence: RecurrenceRule | None = None
+    if match := _RECURRENCE_RE.search(remaining):
+        try:
+            recurrence = parse_recurrence(match.group(0))
+        except RecurrenceError:
+            recurrence = None
+        else:
+            _cut(match)
 
     due_date: str | None = None
     if match := _ISO_DATE_RE.search(remaining):
@@ -88,5 +101,10 @@ def parse_quick_text(text: str, *, today: date | None = None) -> QuickAddResult:
         due_time = f"{int(match.group(1)):02d}:{match.group(2)}"
         _cut(match)
 
+    # "Standup every weekday": no explicit date, so start at the first day the
+    # pattern actually fits rather than leaving the task undated.
+    if recurrence is not None and due_date is None:
+        due_date = first_occurrence(recurrence, today).isoformat()
+
     title = re.sub(r"\s+", " ", remaining).strip()
-    return QuickAddResult(title=title, due_date=due_date, due_time=due_time)
+    return QuickAddResult(title=title, due_date=due_date, due_time=due_time, recurrence=recurrence)

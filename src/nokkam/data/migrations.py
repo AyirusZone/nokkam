@@ -140,6 +140,16 @@ MIGRATIONS: list[tuple[int, str]] = [
         );
         """,
     ),
+    (
+        5,
+        """
+        -- Richer recurrence (see domain/recurrence.py): repeat-on weekdays as
+        -- comma-separated 0-6 (Mon=0), and the nth weekday of a month
+        -- (1-4, or -1 for last). `rule` may now also be monthly_nth | yearly.
+        ALTER TABLE recurrence ADD COLUMN weekdays TEXT;
+        ALTER TABLE recurrence ADD COLUMN nth INTEGER;
+        """,
+    ),
 ]
 
 

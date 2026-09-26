@@ -13,17 +13,12 @@ from textual.widgets import Button, Checkbox, Input, Label, Select, Static
 from textual.widgets.select import NoSelection
 
 from nokkam.domain.models import Priority, Task
+from nokkam.domain.recurrence import RecurrenceError, RecurrenceRule, parse_recurrence
 
 if TYPE_CHECKING:
     from nokkam.app import NokkamApp
 
 PRIORITY_OPTIONS = [("High", Priority.HIGH), ("Medium", Priority.MEDIUM), ("Low", Priority.LOW)]
-RECURRENCE_OPTIONS = [
-    ("None", ""),
-    ("Daily", "daily"),
-    ("Weekly", "weekly"),
-    ("Monthly", "monthly"),
-]
 
 
 @dataclass
@@ -35,7 +30,7 @@ class TaskFormResult:
     due_time: str | None
     project_name: str | None
     tag_names: list[str]
-    recurrence: str
+    recurrence: RecurrenceRule | None
     blocked_by_title: str | None
     private: bool
 
@@ -82,17 +77,15 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
                 yield Input(
                     value=(t.due_time or "") if t else "", id="due_time", placeholder="14:30"
                 )
-            yield Label("Priority  /  Repeats")
-            with Horizontal(classes="field-row"):
-                yield Select(
-                    PRIORITY_OPTIONS,
-                    value=t.priority if t else self.app.config.default_priority,
-                    id="priority",
-                    allow_blank=False,
-                )
-                yield Select(
-                    RECURRENCE_OPTIONS, value=self._recurrence, id="recurrence", allow_blank=False
-                )
+            yield Label("Priority")
+            yield Select(
+                PRIORITY_OPTIONS,
+                value=t.priority if t else self.app.config.default_priority,
+                id="priority",
+                allow_blank=False,
+            )
+            yield Label("Repeats  (e.g. every 2 weeks, every mon,fri, every last fri)")
+            yield Input(value=self._recurrence, id="recurrence", placeholder="Optional")
             yield Label("Project  /  Tags (comma separated)")
             with Horizontal(classes="field-row"):
                 yield Input(value=self._project_name, id="project", placeholder="Optional project")
@@ -121,10 +114,14 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
         due_time = self.query_one("#due_time", Input).value.strip() or None
         project_name = self.query_one("#project", Input).value.strip() or None
         tag_names = [t for t in self.query_one("#tags", Input).value.split(",") if t.strip()]
-        recurrence = self.query_one("#recurrence", Select).value
-        # allow_blank=False on both Selects guarantees a real value, never NoSelection.
+        # allow_blank=False on the Select guarantees a real value, never NoSelection.
         assert not isinstance(priority, NoSelection)
-        assert not isinstance(recurrence, NoSelection)
+        try:
+            recurrence = parse_recurrence(self.query_one("#recurrence", Input).value)
+        except RecurrenceError as exc:
+            self.notify(str(exc), title="Repeats", severity="error")
+            self.query_one("#recurrence", Input).focus()
+            return
         blocked_by_title = self.query_one("#blocked_by", Input).value.strip() or None
         private = self.query_one("#private", Checkbox).value
 

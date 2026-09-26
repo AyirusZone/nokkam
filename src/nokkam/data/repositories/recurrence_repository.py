@@ -12,8 +12,16 @@ class RecurrenceRepository:
     def create(self, rule: RecurrenceRule) -> int:
         with self.conn:
             cur = self.conn.execute(
-                "INSERT INTO recurrence (rule, interval, until, count) VALUES (?, ?, ?, ?)",
-                (rule.rule, rule.interval, rule.until, rule.count),
+                "INSERT INTO recurrence (rule, interval, until, count, weekdays, nth) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    rule.rule,
+                    rule.interval,
+                    rule.until,
+                    rule.count,
+                    ",".join(str(d) for d in rule.weekdays) or None,
+                    rule.nth,
+                ),
             )
         assert cur.lastrowid is not None  # sqlite always assigns one on INSERT
         return cur.lastrowid
@@ -25,5 +33,10 @@ class RecurrenceRepository:
         if row is None:
             return None
         return RecurrenceRule(
-            rule=row["rule"], interval=row["interval"], until=row["until"], count=row["count"]
+            rule=row["rule"],
+            interval=row["interval"],
+            until=row["until"],
+            count=row["count"],
+            weekdays=tuple(int(d) for d in row["weekdays"].split(",")) if row["weekdays"] else (),
+            nth=row["nth"],
         )

@@ -32,6 +32,11 @@ the first release, `v0.1.0`.
   icons, and a private-task flag that masks titles everywhere they appear.
 - Responsive layout: the home screen degrades gracefully on narrow/short
   terminals instead of clipping panes to zero size.
+- Richer recurrence: every N days/weeks/months/years, weekly on chosen days
+  (`every mon,wed,fri`, `every weekday`), the nth or last weekday of a month
+  (`every first tue`), and `until <date>` / `for N times` limits. Entered as
+  text in the task form's Repeats field (replacing the dropdown), in quick
+  add (`Standup every weekday 9:30`) and `nokkam add` (schema migration 5).
 - Configurable keybindings (`[keys]` in `config.toml`) plus new options
   `default_priority`, `first_weekday` (Monday or Sunday) and `start_filter`.
   A malformed config file or bad value now produces a warning notification

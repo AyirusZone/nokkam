@@ -33,7 +33,7 @@ def test_migrations_idempotent_same_connection(tmp_path: Path) -> None:
     conn = connect(tmp_path / "data.db")
     v1 = apply_migrations(conn)
     v2 = apply_migrations(conn)
-    assert v1 == v2 == 4
+    assert v1 == v2 == 5
     conn.close()
 
 
@@ -46,5 +46,5 @@ def test_migrations_idempotent_across_connections(tmp_path: Path) -> None:
 
     conn2 = connect(db_path)
     version = apply_migrations(conn2)
-    assert version == 4
+    assert version == 5
     conn2.close()

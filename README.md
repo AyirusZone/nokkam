@@ -46,8 +46,13 @@ machine.
 **Tasks**
 - Priority (high/medium/low), due date + time, projects, tags
 - Subtasks with indented tree display
-- Recurrence — daily/weekly/monthly; completing a recurring task
-  automatically spawns the next occurrence
+- Recurrence — type it in plain words in the task form's **Repeats** field;
+  completing a recurring task automatically spawns the next occurrence.
+  `every day`, `every 3 days`, `every 2 weeks`, `every weekday`,
+  `every weekend`, `every mon,wed,fri`, `every 2 weeks on mon,thu`,
+  `every month`, `every first tue`, `every last fri`, `every year`; add
+  `until 2026-12-31` and/or `for 10 times` to end a series. Invalid text is
+  rejected with a hint instead of being ignored.
 - Dependencies — mark a task "blocked by" another; completing a blocked
   task is refused until its blocker is done
 - Undo — every add/edit/delete/toggle can be undone with `u`
@@ -58,7 +63,11 @@ machine.
 - The right-hand panes update live to whichever day is selected
 
 **Quick add** — free-text capture with natural-language dates:
-`Buy milk tmrw 3pm`, `Standup fri 9:30`, `Follow up in 3 days`
+`Buy milk tmrw 3pm`, `Standup fri 9:30`, `Follow up in 3 days` — and
+recurrence: `Standup every weekday 9:30`, `Book club every first tue`,
+`Water plants every 2 days`. A recurring task with no date starts on the
+first day the pattern fits. The same text works from the shell:
+`nokkam add "Pay rent every month"`.
 
 **Command palette** (`Ctrl+K`) — fuzzy-search tasks to jump to one, or run
 any action: Add task, Quick add, Undo, Focus calendar, Open agenda, Show

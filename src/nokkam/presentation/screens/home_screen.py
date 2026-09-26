@@ -20,7 +20,7 @@ from textual.widgets import Footer, ListItem, ListView, Static, TabbedContent, T
 
 from nokkam.domain.filter_query import TaskQuery
 from nokkam.domain.models import Event, Project, Status, Tag, Task
-from nokkam.domain.recurrence import RecurrenceRule
+from nokkam.domain.recurrence import RecurrenceRule, format_recurrence
 from nokkam.presentation.screens.help import HelpModal
 from nokkam.presentation.screens.quick_add import QuickAddModal
 from nokkam.presentation.screens.task_form import TaskFormModal, TaskFormResult
@@ -613,6 +613,7 @@ class HomeScreen(Screen):
                 due_date=result.due_date,
                 due_time=result.due_time,
                 priority=self.app.config.default_priority,
+                recurrence_id=self._resolve_recurrence(result.recurrence, None),
             )
             self.app.task_service.add_task(task)
             self.refresh_all()
@@ -658,7 +659,7 @@ class HomeScreen(Screen):
                 task=task,
                 project_name=project.name if project else "",
                 tag_names=", ".join(t.name for t in tags),
-                recurrence=recurrence_rule.rule if recurrence_rule else "",
+                recurrence=format_recurrence(recurrence_rule) if recurrence_rule else "",
                 blocked_by_title=blocker.title if blocker else "",
             ),
             on_result,
@@ -749,14 +750,16 @@ class HomeScreen(Screen):
             return None
         return self.app.project_repo.get_or_create(name)
 
-    def _resolve_recurrence(self, rule: str, existing_id: int | None) -> int | None:
-        if not rule:
+    def _resolve_recurrence(
+        self, rule: RecurrenceRule | None, existing_id: int | None
+    ) -> int | None:
+        """Id of the recurrence row for `rule`, reusing the task's existing one
+        when the rule hasn't changed (so its occurrence count keeps counting)."""
+        if rule is None:
             return None
-        if existing_id is not None:
-            existing = self.app.recurrence_repo.get(existing_id)
-            if existing is not None and existing.rule == rule:
-                return existing_id
-        return self.app.recurrence_repo.create(RecurrenceRule(rule=rule))
+        if existing_id is not None and self.app.recurrence_repo.get(existing_id) == rule:
+            return existing_id
+        return self.app.recurrence_repo.create(rule)
 
     def _resolve_blocker(self, title: str | None) -> int | None:
         if not title:
