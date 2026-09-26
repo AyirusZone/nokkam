@@ -32,6 +32,9 @@ the first release, `v0.1.0`.
   icons, and a private-task flag that masks titles everywhere they appear.
 - Responsive layout: the home screen degrades gracefully on narrow/short
   terminals instead of clipping panes to zero size.
+- Saved filters: `project:`/`tag:`/`priority:`/`due:`/`status:` queries
+  (plus title words) applied from the command palette, with named filters
+  stored in the database (schema migration 4).
 - CI/CD pipeline: lint, format-check, type-check, test, build, and package
   validation on every PR and push to `development`/`master`.
 - Automated dev releases to TestPyPI (`dev-v*` tags) and production releases

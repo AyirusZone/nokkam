@@ -129,6 +129,17 @@ MIGRATIONS: list[tuple[int, str]] = [
         CREATE UNIQUE INDEX idx_event_calendar_uid ON event(calendar_id, uid);
         """,
     ),
+    (
+        4,
+        """
+        -- Named filter queries (see domain/filter_query.py for the syntax).
+        CREATE TABLE saved_filter (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+            query TEXT NOT NULL
+        );
+        """,
+    ),
 ]
 
 

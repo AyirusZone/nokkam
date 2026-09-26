@@ -32,6 +32,8 @@ HELP_TEXT = """\
              or run: Add task, Quick add, Undo, Focus calendar,
              Open agenda, Show stats, Smart list: Today/Overdue/
              This week/All tasks
+             Filter tasks… / Save filter… / Filter: <name>
+             (e.g. project:Work tag:urgent priority:high due:week)
 
 [bold]Global[/]
   ctrl+t     toggle theme

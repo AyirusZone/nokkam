@@ -18,6 +18,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, ListItem, ListView, Static, TabbedContent, TabPane
 
+from nokkam.domain.filter_query import TaskQuery
 from nokkam.domain.models import Event, Project, Status, Tag, Task
 from nokkam.domain.recurrence import RecurrenceRule
 from nokkam.presentation.screens.help import HelpModal
@@ -112,6 +113,8 @@ class HomeScreen(Screen):
         Binding("question_mark", "show_help", "Help"),
     ]
 
+    CUSTOM_FILTER = "custom"
+
     SMART_LIST_LABELS = {
         "today": "Today",
         "overdue": "Overdue",
@@ -121,6 +124,10 @@ class HomeScreen(Screen):
     def __init__(self) -> None:
         super().__init__()
         self.smart_filter: str | None = None
+        # Set while smart_filter == CUSTOM_FILTER: a saved or ad-hoc query
+        # and the label shown for it in the header.
+        self.custom_query: TaskQuery | None = None
+        self.custom_label: str = ""
         self.selected_project_ids: set[int] = set()
         self.selected_tag_ids: set[int] = set()
 
@@ -229,7 +236,9 @@ class HomeScreen(Screen):
         self.calendar.render_month()
 
     def _update_header_meta(self) -> None:
-        if self.smart_filter:
+        if self.smart_filter == self.CUSTOM_FILTER:
+            meta = self.custom_label
+        elif self.smart_filter:
             meta = self.SMART_LIST_LABELS[self.smart_filter]
         else:
             meta = self.calendar.focus_date.strftime("%B %Y")
@@ -342,24 +351,12 @@ class HomeScreen(Screen):
             items.extend(("task", task, depth) for task, depth in groups[key])
         return items
 
-    def _attached_project_ids(self) -> set[int]:
-        return {
-            t.project_id for t in self.app.task_service.list_tasks() if t.project_id is not None
-        }
-
-    def _attached_tag_ids(self) -> set[int]:
-        ids: set[int] = set()
-        for t in self.app.task_service.list_tasks():
-            ids.update(t.tag_ids)
-        return ids
-
     def _refresh_projects_list(self) -> None:
         select_index = self.projects_list.index
         lv = self.projects_list
         lv.clear()
-        attached = self._attached_project_ids()
-        self.selected_project_ids &= attached
-        projects = [p for p in self.app.project_repo.list() if p.id in attached]
+        projects = self.app.project_repo.list()
+        self.selected_project_ids &= {p.id for p in projects if p.id is not None}
         for project in projects:
             assert project.id is not None  # loaded from the repository
             lv.append(ProjectRow(project, selected=project.id in self.selected_project_ids))
@@ -370,9 +367,8 @@ class HomeScreen(Screen):
         select_index = self.tags_list.index
         lv = self.tags_list
         lv.clear()
-        attached = self._attached_tag_ids()
-        self.selected_tag_ids &= attached
-        tags = [tag for tag in self.app.tag_repo.list() if tag.id in attached]
+        tags = self.app.tag_repo.list()
+        self.selected_tag_ids &= {tag.id for tag in tags if tag.id is not None}
         for tag in tags:
             assert tag.id is not None  # loaded from the repository
             lv.append(TagRow(tag, selected=tag.id in self.selected_tag_ids))
@@ -421,7 +417,24 @@ class HomeScreen(Screen):
 
         self.app.push_screen(TextPromptModal("Add tag", "Tag name"), on_result)
 
+    def _custom_filter_tasks(self, query: TaskQuery) -> list[Task]:
+        project_names = {p.id: p.name for p in self.app.project_repo.list()}
+        tag_names = {t.id: t.name for t in self.app.tag_repo.list()}
+        today = date.today()
+        return [
+            t
+            for t in self.app.task_service.list_tasks()
+            if query.matches(
+                t,
+                project_name=project_names.get(t.project_id),
+                tag_names=[tag_names[i] for i in t.tag_ids if i in tag_names],
+                today=today,
+            )
+        ]
+
     def _smart_list_tasks(self) -> list[Task]:
+        if self.smart_filter == self.CUSTOM_FILTER and self.custom_query is not None:
+            return self._custom_filter_tasks(self.custom_query)
         today_iso = date.today().isoformat()
         open_tasks = self.app.task_service.list_tasks(status=Status.OPEN)
         if self.smart_filter == "today":
@@ -433,7 +446,17 @@ class HomeScreen(Screen):
             return [t for t in open_tasks if t.due_date and today_iso <= t.due_date <= week_end]
         return open_tasks
 
+    def set_custom_filter(self, query: TaskQuery, label: str) -> None:
+        """Show only tasks matching `query` in the task list (flat, like the
+        built-in smart lists); cleared by set_smart_filter(None)."""
+        self.custom_query = query
+        self.custom_label = label
+        self.smart_filter = self.CUSTOM_FILTER
+        self._update_header_meta()
+        self._refresh_all_tasks()
+
     def set_smart_filter(self, filter_name: str | None) -> None:
+        self.custom_query = None
         self.smart_filter = filter_name
         self._refresh_all_tasks()
         self._update_header_meta()

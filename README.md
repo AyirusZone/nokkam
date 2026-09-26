@@ -67,6 +67,14 @@ stats, Pomodoro, Smart list: Today/Overdue/This week/All
 **Smart lists** — Today, Overdue, This week, All (filters the task list
 in place; shown in the header)
 
+**Saved filters** — combine conditions in the command palette with
+`Filter tasks…`, or name one with `Save filter…` and recall it later as
+`Filter: <name>`. Syntax: `project:Work tag:urgent priority:high due:week`
+plus free words that must appear in the title. Different keys AND together;
+repeating a key ORs (`tag:a tag:b`). `due:` takes today, tomorrow, overdue,
+week, none or a date; open tasks only unless you add `status:all` or
+`status:done`. Quote values with spaces: `project:"Big Launch"`.
+
 **Agenda** — rolling 14-day view of everything upcoming, chronological
 
 **Stats** — completion rate, current streak, overdue count, and a

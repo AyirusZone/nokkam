@@ -203,7 +203,6 @@ async def test_selecting_a_project_removes_unrelated_dates_from_calendar(tmp_pat
         screen = app.screen
         today = date.today()
         work = app.project_repo.get_or_create("Work")
-        app.project_repo.get_or_create("Personal")
         app.task_service.add_task(
             Task(title="Work task", project_id=work, due_date=today.isoformat())
         )
@@ -239,7 +238,6 @@ async def test_selecting_a_project_filters_todays_tasks(tmp_path: Path) -> None:
         screen = app.screen
         today = date.today()
         work = app.project_repo.get_or_create("Work")
-        app.project_repo.get_or_create("Personal")
         app.task_service.add_task(
             Task(title="Work task", project_id=work, due_date=today.isoformat())
         )
@@ -319,15 +317,7 @@ async def test_add_project_from_projects_pane(tmp_path: Path) -> None:
         await pilot.press("enter")
         await pilot.pause()
 
-        # the pane only lists projects attached to a task, so a freshly
-        # created one stays hidden until something uses it
-        assert list(screen.projects_list.children) == []
-
-        project_id = app.project_repo.get_or_create("Personal")
-        app.task_service.add_task(Task(title="Something", project_id=project_id))
-        screen.refresh_all()
-        await pilot.pause()
-
+        # a freshly added project shows up right away, before any task uses it
         names = [row.project.name for row in screen.projects_list.children]
         assert names == ["Personal"]
 
@@ -346,19 +336,12 @@ async def test_add_tag_from_tags_pane(tmp_path: Path) -> None:
         await pilot.press("enter")
         await pilot.pause()
 
-        # same rule for tags: hidden until attached to a task
-        assert list(screen.tags_list.children) == []
-
-        tag_id = app.tag_repo.get_or_create("home")
-        app.task_service.add_task(Task(title="Something", tag_ids=[tag_id]))
-        screen.refresh_all()
-        await pilot.pause()
-
+        # same for tags: listed immediately, no task needed
         names = [row.tag.name for row in screen.tags_list.children]
         assert names == ["home"]
 
 
-async def test_projects_and_tags_panes_only_list_attached_ones(tmp_path: Path) -> None:
+async def test_projects_and_tags_panes_list_unattached_ones_too(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
         screen = app.screen
@@ -374,8 +357,8 @@ async def test_projects_and_tags_panes_only_list_attached_ones(tmp_path: Path) -
 
         project_names = [row.project.name for row in screen.projects_list.children]
         tag_names = [row.tag.name for row in screen.tags_list.children]
-        assert project_names == ["Used"]
-        assert tag_names == ["used-tag"]
+        assert project_names == ["Unused", "Used"]
+        assert tag_names == ["unused-tag", "used-tag"]
 
 
 async def test_projects_tags_and_all_tasks_live_in_one_tabbed_pane(tmp_path: Path) -> None:
