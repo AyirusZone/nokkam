@@ -218,15 +218,39 @@ JSON and CSV round-trip tags by name; ICS is export-only.
 
 ## Configuration
 
-Optional — `~/.nokkam/config.toml`:
+Optional — `~/.nokkam/config.toml`. Every option is optional; these are the
+defaults:
 
 ```toml
 theme = "nokkam-dark"       # or "nokkam-light"
-accent = "#FF6B4A"       # any hex color; drives both themes' accent
+accent = "#FF6B4A"          # any hex color; drives both themes' accent
 db_path = "~/.nokkam/data.db"
+default_priority = "medium" # priority new tasks start with: high | medium | low
+first_weekday = "monday"    # calendar week starts on: monday | sunday
+# start_filter = "today"    # apply on launch: today | overdue | week | a saved filter's name
+# ics_sources = ["/path/to/calendar.ics", "https://example.com/cal.ics"]
+
+# icons = { flight = "✈", standup = "🗣" }   # keyword -> icon overrides
+
+# Rebind any home-screen or global key by its binding id. Separate several
+# keys with a comma. Only the keys shown here change; the rest keep defaults.
+[keys]
+# add_task = "n"
+# nav_left = "left,a"
 ```
 
-Nothing needs to be set — these are the defaults if the file is absent.
+A mistake in this file never stops nokkam from starting: bad TOML, a wrong
+value, an unknown option or binding name, or two actions on the same key are
+each reported as a warning notification (and the default is used).
+
+**Binding ids** for `[keys]` (default key in brackets): `nav_left` [left,h],
+`nav_right` [right,l], `nav_up` [up,k], `nav_down` [down,j], `prev_month` `[`,
+`next_month` `]`, `context_today_or_timer` [t], `pause_resume_timer` [p],
+`add_task` [a], `edit_task` [e], `delete_task` [d], `toggle_complete` [space],
+`undo` [u], `add_subtask` [s], `quick_add` [A], `open_agenda` [w],
+`open_stats` [S], `open_project_summary` [O], `open_pomodoro` [P],
+`sync_calendars` [R], `show_help` [?], `toggle_theme` [ctrl+t],
+`command_palette` [ctrl+k], `quit` [q]. Dialogs keep their fixed keys.
 
 ## Development
 

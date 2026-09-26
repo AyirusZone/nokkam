@@ -91,27 +91,27 @@ class HomeScreen(Screen):
     app: NokkamApp
 
     BINDINGS = [
-        Binding("left,h", "nav_left", "Left", show=False),
-        Binding("right,l", "nav_right", "Right", show=False),
-        Binding("up,k", "nav_up", "Up", show=False),
-        Binding("down,j", "nav_down", "Down", show=False),
-        Binding("[", "prev_month", "Prev month"),
-        Binding("]", "next_month", "Next month"),
-        Binding("t", "context_today_or_timer", "Today/Timer"),
-        Binding("p", "pause_resume_timer", "Pause/Resume timer"),
-        Binding("a", "add_task", "Add"),
-        Binding("e", "edit_task", "Edit"),
-        Binding("d", "delete_task", "Delete"),
-        Binding("space", "toggle_complete", "Toggle"),
-        Binding("u", "undo", "Undo"),
-        Binding("s", "add_subtask", "Subtask"),
-        Binding("A", "quick_add", "Quick add"),
-        Binding("w", "open_agenda", "Agenda"),
-        Binding("S", "open_stats", "Stats"),
-        Binding("O", "open_project_summary", "Projects overview"),
-        Binding("P", "open_pomodoro", "Pomodoro"),
-        Binding("R", "sync_calendars", "Sync calendars"),
-        Binding("question_mark", "show_help", "Help"),
+        Binding("left,h", "nav_left", "Left", show=False, id="nav_left"),
+        Binding("right,l", "nav_right", "Right", show=False, id="nav_right"),
+        Binding("up,k", "nav_up", "Up", show=False, id="nav_up"),
+        Binding("down,j", "nav_down", "Down", show=False, id="nav_down"),
+        Binding("[", "prev_month", "Prev month", id="prev_month"),
+        Binding("]", "next_month", "Next month", id="next_month"),
+        Binding("t", "context_today_or_timer", "Today/Timer", id="context_today_or_timer"),
+        Binding("p", "pause_resume_timer", "Pause/Resume timer", id="pause_resume_timer"),
+        Binding("a", "add_task", "Add", id="add_task"),
+        Binding("e", "edit_task", "Edit", id="edit_task"),
+        Binding("d", "delete_task", "Delete", id="delete_task"),
+        Binding("space", "toggle_complete", "Toggle", id="toggle_complete"),
+        Binding("u", "undo", "Undo", id="undo"),
+        Binding("s", "add_subtask", "Subtask", id="add_subtask"),
+        Binding("A", "quick_add", "Quick add", id="quick_add"),
+        Binding("w", "open_agenda", "Agenda", id="open_agenda"),
+        Binding("S", "open_stats", "Stats", id="open_stats"),
+        Binding("O", "open_project_summary", "Projects overview", id="open_project_summary"),
+        Binding("P", "open_pomodoro", "Pomodoro", id="open_pomodoro"),
+        Binding("R", "sync_calendars", "Sync calendars", id="sync_calendars"),
+        Binding("question_mark", "show_help", "Help", id="show_help"),
     ]
 
     CUSTOM_FILTER = "custom"
@@ -136,7 +136,7 @@ class HomeScreen(Screen):
         yield AppHeader(subtitle="home")
         with Horizontal(id="home-body"):
             with Vertical(id="main-pane"):
-                yield CalendarGrid(id="calendar")
+                yield CalendarGrid(id="calendar", first_weekday=self.app.config.first_weekday)
                 with Vertical(id="day-pane"):
                     yield Static("", id="day-title", classes="accent-text")
                     yield ListView(id="day-tasks")
@@ -151,7 +151,27 @@ class HomeScreen(Screen):
 
     def on_mount(self) -> None:
         self.refresh_all()
+        self._apply_start_filter()
         self.all_list.focus()
+
+    def _apply_start_filter(self) -> None:
+        """Applies config.toml's `start_filter` (a smart list or saved filter)."""
+        name = self.app.config.start_filter
+        if not name:
+            return
+        if name.lower() in self.SMART_LIST_LABELS:
+            self.set_smart_filter(name.lower())
+            return
+        for saved in self.app.saved_filter_repo.list():
+            if saved.name.lower() == name.lower():
+                self.app.apply_filter(saved.query, saved.name)
+                return
+        self.app.notify(
+            f"start_filter '{name}' is not a smart list (today, overdue, week) "
+            "or a saved filter",
+            title="config.toml",
+            severity="warning",
+        )
 
     # ---- widget accessors ----
     @property
@@ -588,7 +608,12 @@ class HomeScreen(Screen):
         def on_result(result) -> None:
             if result is None or not result.title:
                 return
-            task = Task(title=result.title, due_date=result.due_date, due_time=result.due_time)
+            task = Task(
+                title=result.title,
+                due_date=result.due_date,
+                due_time=result.due_time,
+                priority=self.app.config.default_priority,
+            )
             self.app.task_service.add_task(task)
             self.refresh_all()
 

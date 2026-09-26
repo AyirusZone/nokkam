@@ -92,8 +92,10 @@ class DayCell(Static):
 
 
 class CalendarGrid(Vertical, can_focus=True):
-    def __init__(self, id: str | None = None) -> None:
+    def __init__(self, id: str | None = None, first_weekday: int = 0) -> None:
         super().__init__(id=id)
+        # Python weekday() number the week starts on: 0 = Monday, 6 = Sunday.
+        self.first_weekday = first_weekday
         self.focus_date: date = date.today()
         self.tasks_by_date: dict[str, list[Task]] = {}
         self.events_by_date: dict[str, list[Event]] = {}
@@ -102,7 +104,8 @@ class CalendarGrid(Vertical, can_focus=True):
 
     def compose(self) -> ComposeResult:
         with Horizontal(classes="calendar-header-row"):
-            for i, label in enumerate(WEEKDAY_LABELS):
+            for i in [(self.first_weekday + n) % 7 for n in range(7)]:
+                label = WEEKDAY_LABELS[i]
                 yield Static(
                     label, classes="weekday-label" + (" weekend" if i in WEEKEND_INDICES else "")
                 )
@@ -115,7 +118,7 @@ class CalendarGrid(Vertical, can_focus=True):
         weeks = self.query_one("#calendar-weeks", Vertical)
         weeks.remove_children()
 
-        cal = calendar_mod.Calendar(firstweekday=0)
+        cal = calendar_mod.Calendar(firstweekday=self.first_weekday)
         today = date.today()
         month_dates = list(cal.itermonthdates(self.focus_date.year, self.focus_date.month))
         week_rows = [month_dates[i : i + 7] for i in range(0, len(month_dates), 7)]

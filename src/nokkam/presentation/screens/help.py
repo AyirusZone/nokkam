@@ -28,6 +28,8 @@ HELP_TEXT = """\
   P          open Pomodoro (25/5 focus timer)
   R          sync configured .ics calendars now
 
+[dim]Keys are rebindable under [[keys]] in ~/.nokkam/config.toml[/]
+
 [bold]Command palette[/]
   ctrl+k     open palette — fuzzy-search tasks to jump to them,
              or run: Add task, Quick add, Undo, Focus calendar,

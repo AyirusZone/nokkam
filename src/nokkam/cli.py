@@ -4,6 +4,7 @@ the Textual UI entirely. Invoked from app.main() when argv has a subcommand."""
 from __future__ import annotations
 
 import argparse
+import sys
 
 from nokkam.config import AppConfig, load_config
 from nokkam.data.db import connect
@@ -56,6 +57,8 @@ def run_cli(argv: list[str], config: AppConfig | None = None) -> int:
         return 1
 
     config = config or load_config()
+    for warning in config.warnings:
+        print(f"warning: {warning}", file=sys.stderr)
     conn = connect(config.db_path)
     apply_migrations(conn)
     task_repo = TaskRepository(conn)
@@ -63,7 +66,7 @@ def run_cli(argv: list[str], config: AppConfig | None = None) -> int:
     tag_repo = TagRepository(conn)
     try:
         if args.command == "add":
-            return _cmd_add(args, task_repo, project_repo, tag_repo)
+            return _cmd_add(args, task_repo, project_repo, tag_repo, config.default_priority)
         if args.command == "export":
             return _cmd_export(args, task_repo, tag_repo)
         if args.command == "import":
@@ -75,7 +78,11 @@ def run_cli(argv: list[str], config: AppConfig | None = None) -> int:
 
 
 def _cmd_add(
-    args, task_repo: TaskRepository, project_repo: ProjectRepository, tag_repo: TagRepository
+    args,
+    task_repo: TaskRepository,
+    project_repo: ProjectRepository,
+    tag_repo: TagRepository,
+    default_priority: int = Priority.MEDIUM,
 ) -> int:
     parsed = parse_quick_text(args.text)
     due_date = args.due or parsed.due_date
@@ -83,7 +90,7 @@ def _cmd_add(
         title=parsed.title,
         due_date=due_date,
         due_time=parsed.due_time,
-        priority=_PRIORITY_MAP.get(args.priority, Priority.MEDIUM),
+        priority=_PRIORITY_MAP.get(args.priority, default_priority),
         project_id=project_repo.get_or_create(args.project) if args.project else None,
         tag_ids=tag_repo.get_or_create_many(args.tags.split(",")) if args.tags else [],
     )

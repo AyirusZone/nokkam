@@ -42,7 +42,7 @@ def test_repository_save_list_replace_delete(tmp_path: Path) -> None:
     conn.close()
 
 
-async def test_apply_filter_narrows_task_list_and_sets_header(tmp_path: Path) -> None:
+async def testapply_filter_narrows_task_list_and_sets_header(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
         work = app.project_repo.get_or_create("Work")
@@ -56,7 +56,7 @@ async def test_apply_filter_narrows_task_list_and_sets_header(tmp_path: Path) ->
         app.screen.refresh_all()
         await pilot.pause()
 
-        assert app._apply_filter("project:Work tag:urgent due:week", "Work urgent") is True
+        assert app.apply_filter("project:Work tag:urgent due:week", "Work urgent") is True
         await pilot.pause()
 
         assert visible_titles(app) == ["Match"]
@@ -74,7 +74,7 @@ async def test_bad_query_keeps_current_view_and_reports_error(tmp_path: Path) ->
         app.screen.refresh_all()
         await pilot.pause()
 
-        assert app._apply_filter("colour:red", "bad") is False
+        assert app.apply_filter("colour:red", "bad") is False
         await pilot.pause()
 
         assert app.screen.smart_filter is None
@@ -112,7 +112,7 @@ async def test_save_filter_flow_persists_and_appears_in_palette(tmp_path: Path) 
         await pilot.pause()
         assert sorted(visible_titles(app)) == ["High one", "Low one"]
 
-        app._apply_filter("priority:high", "Important")
+        app.apply_filter("priority:high", "Important")
         app._delete_filter("Important")
         assert app.saved_filter_repo.list() == []
 

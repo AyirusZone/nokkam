@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from textual import on
 from textual.app import ComposeResult
@@ -12,6 +13,9 @@ from textual.widgets import Button, Checkbox, Input, Label, Select, Static
 from textual.widgets.select import NoSelection
 
 from nokkam.domain.models import Priority, Task
+
+if TYPE_CHECKING:
+    from nokkam.app import NokkamApp
 
 PRIORITY_OPTIONS = [("High", Priority.HIGH), ("Medium", Priority.MEDIUM), ("Low", Priority.LOW)]
 RECURRENCE_OPTIONS = [
@@ -37,6 +41,8 @@ class TaskFormResult:
 
 
 class TaskFormModal(ModalScreen[TaskFormResult | None]):
+    app: NokkamApp
+
     BINDINGS = [("escape", "cancel", "Cancel")]
 
     def __init__(
@@ -80,7 +86,7 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
             with Horizontal(classes="field-row"):
                 yield Select(
                     PRIORITY_OPTIONS,
-                    value=t.priority if t else Priority.MEDIUM,
+                    value=t.priority if t else self.app.config.default_priority,
                     id="priority",
                     allow_blank=False,
                 )

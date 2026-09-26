@@ -32,6 +32,10 @@ the first release, `v0.1.0`.
   icons, and a private-task flag that masks titles everywhere they appear.
 - Responsive layout: the home screen degrades gracefully on narrow/short
   terminals instead of clipping panes to zero size.
+- Configurable keybindings (`[keys]` in `config.toml`) plus new options
+  `default_priority`, `first_weekday` (Monday or Sunday) and `start_filter`.
+  A malformed config file or bad value now produces a warning notification
+  and falls back to defaults instead of crashing on launch.
 - Projects overview screen (`O`, or "Project summary" in the command
   palette): per-project progress, overdue count, and time tracked overall
   and over the last 7 days.
