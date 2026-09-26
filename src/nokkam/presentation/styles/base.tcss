@@ -335,6 +335,18 @@ StatsScreen {
     padding: 2 3;
 }
 
+/* ---------- Project summary ---------- */
+ProjectSummaryScreen {
+    align: center middle;
+}
+
+#project-summary-body {
+    width: 88;
+    height: auto;
+    max-height: 90%;
+    padding: 1 2;
+}
+
 /* ---------- Pomodoro ---------- */
 #pomodoro-panel {
     width: 40;

@@ -80,6 +80,10 @@ week, none or a date; open tasks only unless you add `status:all` or
 **Stats** — completion rate, current streak, overdue count, and a
 GitHub-style contribution heatmap of the last 12 weeks
 
+**Projects overview** (`O`) — one row per project: done/total, open,
+overdue, a progress bar, total time tracked, and time tracked in the last
+7 days, plus a "No project" row for unassigned tasks
+
 **Time tracking** — start/stop a timer on the selected task (starting a
 new one stops whatever was running); **Pomodoro** — 25/5 focus timer with
 pause/reset
@@ -163,6 +167,7 @@ has focus.
 | `A` | Quick add (free text with a natural-language date) |
 | `w` | Open agenda (next 14 days) |
 | `S` | Open stats |
+| `O` | Open projects overview (progress + time per project) |
 | `P` | Open Pomodoro (25/5 focus timer) |
 | `Ctrl+T` | Toggle light/dark theme |
 | `Ctrl+K` | Command palette |

@@ -108,6 +108,7 @@ class HomeScreen(Screen):
         Binding("A", "quick_add", "Quick add"),
         Binding("w", "open_agenda", "Agenda"),
         Binding("S", "open_stats", "Stats"),
+        Binding("O", "open_project_summary", "Projects overview"),
         Binding("P", "open_pomodoro", "Pomodoro"),
         Binding("R", "sync_calendars", "Sync calendars"),
         Binding("question_mark", "show_help", "Help"),
@@ -709,6 +710,11 @@ class HomeScreen(Screen):
         from nokkam.presentation.screens.stats_screen import StatsScreen
 
         self.app.push_screen(StatsScreen())
+
+    def action_open_project_summary(self) -> None:
+        from nokkam.presentation.screens.project_summary_screen import ProjectSummaryScreen
+
+        self.app.push_screen(ProjectSummaryScreen())
 
     def action_open_pomodoro(self) -> None:
         self.app.action_open_pomodoro()

@@ -32,6 +32,9 @@ the first release, `v0.1.0`.
   icons, and a private-task flag that masks titles everywhere they appear.
 - Responsive layout: the home screen degrades gracefully on narrow/short
   terminals instead of clipping panes to zero size.
+- Projects overview screen (`O`, or "Project summary" in the command
+  palette): per-project progress, overdue count, and time tracked overall
+  and over the last 7 days.
 - Saved filters: `project:`/`tag:`/`priority:`/`due:`/`status:` queries
   (plus title words) applied from the command palette, with named filters
   stored in the database (schema migration 4).

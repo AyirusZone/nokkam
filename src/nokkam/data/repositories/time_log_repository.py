@@ -39,3 +39,18 @@ class TimeLogRepository:
             (task_id,),
         ).fetchone()
         return int(row["minutes"])
+
+    def minutes_by_task(self, since: str | None = None) -> dict[int, float]:
+        """Logged minutes per task (running timers count up to now). With
+        `since` (an ISO date), only log segments that started on or after
+        that date are counted."""
+        query = """SELECT task_id,
+                   SUM((julianday(COALESCE(end_at, datetime('now', 'localtime')))
+                        - julianday(start_at)) * 24 * 60) AS minutes
+                   FROM time_log"""
+        params: tuple[str, ...] = ()
+        if since is not None:
+            query += " WHERE start_at >= ?"
+            params = (since,)
+        rows = self.conn.execute(query + " GROUP BY task_id", params).fetchall()
+        return {r["task_id"]: float(r["minutes"]) for r in rows}
