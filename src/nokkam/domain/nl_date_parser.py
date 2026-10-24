@@ -35,6 +35,10 @@ _RECURRENCE_RE = re.compile(
     r")(?:\s+until\s+\d{4}-\d{2}-\d{2})?(?:\s+for\s+\d+\s+times?)?\b",
     re.IGNORECASE,
 )
+# "everyday" as one word means "every day" only where the phrase clearly ends
+# ("Stretch everyday", "Stretch everyday 9am"); mid-title it is far more often
+# the adjective ("Buy everyday essentials").
+_EVERYDAY_RE = re.compile(r"\beveryday\b(?=\s*(?:$|\d|at\b|until\b|for\b|,|;))", re.IGNORECASE)
 _ISO_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 _IN_N_RE = re.compile(r"\bin\s+(\d+)\s+(day|days|week|weeks)\b", re.IGNORECASE)
 _RELATIVE_RE = re.compile(r"\b(" + "|".join(_RELATIVE_DAYS) + r")\b", re.IGNORECASE)
@@ -60,6 +64,8 @@ def parse_quick_text(text: str, *, today: date | None = None) -> QuickAddResult:
     def _cut(match: re.Match) -> None:
         nonlocal remaining
         remaining = remaining[: match.start()] + remaining[match.end() :]
+
+    remaining = _EVERYDAY_RE.sub("every day", remaining)
 
     recurrence: RecurrenceRule | None = None
     if match := _RECURRENCE_RE.search(remaining):

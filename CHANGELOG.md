@@ -32,10 +32,19 @@ the first release, `v0.1.0`.
   icons, and a private-task flag that masks titles everywhere they appear.
 - Responsive layout: the home screen degrades gracefully on narrow/short
   terminals instead of clipping panes to zero size.
+- Fix: adding or editing a recurring task with no explicit due date left it
+  undated — invisible on the calendar and never actually scheduled. It now
+  defaults to the first day the repeat rule fits.
+- Habit streaks screen (`H`): current and best streak, on-time rate and recent
+  history for every recurring task. Editing a task's repeat rule now updates
+  its series in place so the history (and streak) is kept.
+- Time report screen (`T`): time per project as bars and per day as a column
+  chart, for the last 7 days, 30 days or all time.
 - Richer recurrence: every N days/weeks/months/years, weekly on chosen days
   (`every mon,wed,fri`, `every weekday`), the nth or last weekday of a month
   (`every first tue`), and `until <date>` / `for N times` limits. Entered as
-  text in the task form's Repeats field (replacing the dropdown), in quick
+  text in the task form's Repeats field (with a dropdown of ready-made
+  intervals beside it), in quick
   add (`Standup every weekday 9:30`) and `nokkam add` (schema migration 5).
 - Configurable keybindings (`[keys]` in `config.toml`) plus new options
   `default_priority`, `first_weekday` (Monday or Sunday) and `start_filter`.

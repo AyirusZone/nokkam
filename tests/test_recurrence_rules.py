@@ -229,3 +229,37 @@ def test_format_then_parse_round_trips(
 def test_nth_weekday_round_trips(nth: int, weekday: int) -> None:
     original = RecurrenceRule(rule="monthly_nth", weekdays=(weekday,), nth=nth)
     assert parse_recurrence(format_recurrence(original)) == original
+
+
+# ---- forgiving spellings ----
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("everyday", rule("daily")),
+        ("Everyday", rule("daily")),
+        ("every-day", rule("daily")),
+        ("each-day", rule("daily")),
+        ("everyweek", rule("weekly")),
+        ("everymonth", rule("monthly")),
+        ("everyyear", rule("yearly")),
+        ("everyweekday", rule("weekly", weekdays=(0, 1, 2, 3, 4))),
+        ("everyweekend", rule("weekly", weekdays=(5, 6))),
+        ("mondays", rule("weekly", weekdays=(0,))),
+        ("every mondays", rule("weekly", weekdays=(0,))),
+        ("every tuesdays and thursdays", rule("weekly", weekdays=(1, 3))),
+        ("everyday until 2026-12-31", rule("daily", until="2026-12-31")),
+        ("everyday for 5 times", rule("daily", count=5)),
+    ],
+)
+def test_one_word_and_plural_spellings(text: str, expected: RecurrenceRule) -> None:
+    assert parse_recurrence(text) == expected
+
+
+def test_plural_handling_does_not_break_real_words() -> None:
+    assert parse_recurrence("every weekdays") == rule("weekly", weekdays=(0, 1, 2, 3, 4))
+    assert parse_recurrence("every days") == rule("daily")
+    assert parse_recurrence("every thurs") == rule("weekly", weekdays=(3,))
+    with pytest.raises(RecurrenceError):
+        parse_recurrence("every somedays")

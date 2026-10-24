@@ -78,6 +78,18 @@ def compute_project_summaries(
     return ordered
 
 
+def compact_minutes(minutes: int) -> str:
+    """At most 4 characters, for chart labels: 45m, 1.5h, 2h, 12h ('' for none)."""
+    if minutes <= 0:
+        return ""
+    if minutes < 60:
+        return f"{minutes}m"
+    if minutes < 600:
+        hours = f"{minutes / 60:.1f}".removesuffix(".0")
+        return f"{hours}h"
+    return f"{round(minutes / 60)}h"
+
+
 def format_minutes(minutes: int) -> str:
     if minutes <= 0:
         return "—"

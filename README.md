@@ -46,11 +46,14 @@ machine.
 **Tasks**
 - Priority (high/medium/low), due date + time, projects, tags
 - Subtasks with indented tree display
-- Recurrence — type it in plain words in the task form's **Repeats** field;
-  completing a recurring task automatically spawns the next occurrence.
+- Recurrence — pick a ready-made interval in the task form's **Repeats**
+  dropdown (every day, weekday, weekend, week, 2 weeks, month, 3 months,
+  year) or choose Custom… and type it in plain words; completing a recurring
+  task automatically spawns the next occurrence.
   `every day`, `every 3 days`, `every 2 weeks`, `every weekday`,
   `every weekend`, `every mon,wed,fri`, `every 2 weeks on mon,thu`,
-  `every month`, `every first tue`, `every last fri`, `every year`; add
+  `every month`, `every first tue`, `every last fri`, `every year` (one-word
+  `everyday` / `everyweek` and plurals like `mondays` work too); add
   `until 2026-12-31` and/or `for 10 times` to end a series. Invalid text is
   rejected with a hint instead of being ignored.
 - Dependencies — mark a task "blocked by" another; completing a blocked
@@ -92,6 +95,16 @@ GitHub-style contribution heatmap of the last 12 weeks
 **Projects overview** (`O`) — one row per project: done/total, open,
 overdue, a progress bar, total time tracked, and time tracked in the last
 7 days, plus a "No project" row for unassigned tasks
+
+**Habits** (`H`) — every recurring task is a habit. A completion counts if it
+was done on or before its due date; finishing late, or letting an occurrence
+go overdue, breaks the streak. Shows the current and best streak, the on-time
+rate, and the last 10 occurrences (■ on time, ▲ late, □ upcoming, ✗ missed).
+Changing a habit's repeat rule keeps its history.
+
+**Time report** (`T`) — bar chart of time tracked per project and a per-day
+column chart, switchable between the last 7 days, 30 days and all time
+(`1` / `2` / `3`). A tracked session counts on the day it started.
 
 **Time tracking** — start/stop a timer on the selected task (starting a
 new one stops whatever was running); **Pomodoro** — 25/5 focus timer with
@@ -177,6 +190,8 @@ has focus.
 | `w` | Open agenda (next 14 days) |
 | `S` | Open stats |
 | `O` | Open projects overview (progress + time per project) |
+| `H` | Open habits (streaks for recurring tasks) |
+| `T` | Open time report (chart of time per project and per day) |
 | `P` | Open Pomodoro (25/5 focus timer) |
 | `Ctrl+T` | Toggle light/dark theme |
 | `Ctrl+K` | Command palette |
@@ -257,7 +272,8 @@ each reported as a warning notification (and the default is used).
 `next_month` `]`, `context_today_or_timer` [t], `pause_resume_timer` [p],
 `add_task` [a], `edit_task` [e], `delete_task` [d], `toggle_complete` [space],
 `undo` [u], `add_subtask` [s], `quick_add` [A], `open_agenda` [w],
-`open_stats` [S], `open_project_summary` [O], `open_pomodoro` [P],
+`open_stats` [S], `open_project_summary` [O], `open_habits` [H],
+`open_time_report` [T], `open_pomodoro` [P],
 `sync_calendars` [R], `show_help` [?], `toggle_theme` [ctrl+t],
 `command_palette` [ctrl+k], `quit` [q]. Dialogs keep their fixed keys.
 

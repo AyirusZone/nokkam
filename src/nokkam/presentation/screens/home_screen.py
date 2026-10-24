@@ -20,7 +20,7 @@ from textual.widgets import Footer, ListItem, ListView, Static, TabbedContent, T
 
 from nokkam.domain.filter_query import TaskQuery
 from nokkam.domain.models import Event, Project, Status, Tag, Task
-from nokkam.domain.recurrence import RecurrenceRule, format_recurrence
+from nokkam.domain.recurrence import RecurrenceRule, first_occurrence, format_recurrence
 from nokkam.presentation.screens.help import HelpModal
 from nokkam.presentation.screens.quick_add import QuickAddModal
 from nokkam.presentation.screens.task_form import TaskFormModal, TaskFormResult
@@ -109,6 +109,8 @@ class HomeScreen(Screen):
         Binding("w", "open_agenda", "Agenda", id="open_agenda"),
         Binding("S", "open_stats", "Stats", id="open_stats"),
         Binding("O", "open_project_summary", "Projects overview", id="open_project_summary"),
+        Binding("H", "open_habits", "Habits", id="open_habits"),
+        Binding("T", "open_time_report", "Time report", id="open_time_report"),
         Binding("P", "open_pomodoro", "Pomodoro", id="open_pomodoro"),
         Binding("R", "sync_calendars", "Sync calendars", id="sync_calendars"),
         Binding("question_mark", "show_help", "Help", id="show_help"),
@@ -559,7 +561,7 @@ class HomeScreen(Screen):
                 title=result.title,
                 notes=result.notes,
                 priority=result.priority,
-                due_date=result.due_date,
+                due_date=self._default_due_date(result.due_date, result.recurrence),
                 due_time=result.due_time,
                 project_id=self._resolve_project(result.project_name),
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
@@ -587,7 +589,7 @@ class HomeScreen(Screen):
                 title=result.title,
                 notes=result.notes,
                 priority=result.priority,
-                due_date=result.due_date,
+                due_date=self._default_due_date(result.due_date, result.recurrence),
                 due_time=result.due_time,
                 project_id=self._resolve_project(result.project_name),
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
@@ -620,6 +622,15 @@ class HomeScreen(Screen):
 
         self.app.push_screen(QuickAddModal(), on_result)
 
+    def _default_due_date(self, due_date: str | None, rule: RecurrenceRule | None) -> str | None:
+        """A recurring task needs a due date to ever be scheduled or show up
+        on the calendar — pick the first day the rule fits (today, if today
+        fits) when none was given. A non-recurring task, or one with an
+        explicit date, is left as-is."""
+        if due_date or rule is None:
+            return due_date
+        return first_occurrence(rule, date.today()).isoformat()
+
     def action_edit_task(self) -> None:
         task = self.selected_task
         if task is None:
@@ -642,7 +653,7 @@ class HomeScreen(Screen):
                 title=result.title,
                 notes=result.notes,
                 priority=result.priority,
-                due_date=result.due_date,
+                due_date=self._default_due_date(result.due_date, result.recurrence),
                 due_time=result.due_time,
                 project_id=self._resolve_project(result.project_name),
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
@@ -737,6 +748,16 @@ class HomeScreen(Screen):
 
         self.app.push_screen(StatsScreen())
 
+    def action_open_habits(self) -> None:
+        from nokkam.presentation.screens.habits_screen import HabitsScreen
+
+        self.app.push_screen(HabitsScreen())
+
+    def action_open_time_report(self) -> None:
+        from nokkam.presentation.screens.time_report_screen import TimeReportScreen
+
+        self.app.push_screen(TimeReportScreen())
+
     def action_open_project_summary(self) -> None:
         from nokkam.presentation.screens.project_summary_screen import ProjectSummaryScreen
 
@@ -753,11 +774,14 @@ class HomeScreen(Screen):
     def _resolve_recurrence(
         self, rule: RecurrenceRule | None, existing_id: int | None
     ) -> int | None:
-        """Id of the recurrence row for `rule`, reusing the task's existing one
-        when the rule hasn't changed (so its occurrence count keeps counting)."""
+        """Id of the recurrence row for `rule`. Editing a recurring task's rule
+        updates its existing row in place rather than starting a new series, so
+        the habit history (and streak) follows the task."""
         if rule is None:
             return None
-        if existing_id is not None and self.app.recurrence_repo.get(existing_id) == rule:
+        if existing_id is not None:
+            if self.app.recurrence_repo.get(existing_id) != rule:
+                self.app.recurrence_repo.update(existing_id, rule)
             return existing_id
         return self.app.recurrence_repo.create(rule)
 

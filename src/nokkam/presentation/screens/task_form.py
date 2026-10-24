@@ -14,6 +14,11 @@ from textual.widgets.select import NoSelection
 
 from nokkam.domain.models import Priority, Task
 from nokkam.domain.recurrence import RecurrenceError, RecurrenceRule, parse_recurrence
+from nokkam.presentation.widgets.recurrence_presets import (
+    CUSTOM,
+    RECURRENCE_PRESETS,
+    preset_for,
+)
 
 if TYPE_CHECKING:
     from nokkam.app import NokkamApp
@@ -84,8 +89,15 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
                 id="priority",
                 allow_blank=False,
             )
-            yield Label("Repeats  (e.g. every 2 weeks, every mon,fri, every last fri)")
-            yield Input(value=self._recurrence, id="recurrence", placeholder="Optional")
+            yield Label("Repeats  (pick one, or type your own: every 2 weeks, every mon,fri)")
+            with Horizontal(classes="field-row"):
+                yield Select(
+                    RECURRENCE_PRESETS,
+                    value=preset_for(self._recurrence),
+                    id="recurrence-preset",
+                    allow_blank=False,
+                )
+                yield Input(value=self._recurrence, id="recurrence", placeholder="Custom rule")
             yield Label("Project  /  Tags (comma separated)")
             with Horizontal(classes="field-row"):
                 yield Input(value=self._project_name, id="project", placeholder="Optional project")
@@ -101,6 +113,15 @@ class TaskFormModal(ModalScreen[TaskFormResult | None]):
 
     def on_mount(self) -> None:
         self.query_one("#title", Input).focus()
+
+    @on(Select.Changed, "#recurrence-preset")
+    def preset_chosen(self, event: Select.Changed) -> None:
+        """Picking a preset fills the rule field; "Custom…" hands it to you."""
+        rule_input = self.query_one("#recurrence", Input)
+        if event.value == CUSTOM:
+            rule_input.focus()
+        elif isinstance(event.value, str):
+            rule_input.value = event.value
 
     @on(Button.Pressed, "#save")
     def save(self) -> None:

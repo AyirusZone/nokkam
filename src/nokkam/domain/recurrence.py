@@ -66,6 +66,17 @@ _UNITS = {
     "yearly": "yearly",
     "annually": "yearly",
 }
+# One-word spellings people type: "everyday" -> "every day".
+_GLUED = {
+    "everyday": ["every", "day"],
+    "everyweek": ["every", "week"],
+    "everymonth": ["every", "month"],
+    "everyyear": ["every", "year"],
+    "everyweekday": ["every", "weekday"],
+    "everyweekdays": ["every", "weekdays"],
+    "everyweekend": ["every", "weekend"],
+    "everyweekends": ["every", "weekends"],
+}
 _ADVERBS = {"daily", "weekly", "monthly", "yearly", "annually"}
 _NO_RECURRENCE = {"", "none", "never", "no", "off"}
 _EXAMPLES = (
@@ -192,7 +203,10 @@ def parse_recurrence(text: str) -> RecurrenceRule | None:
             raise RecurrenceError("The number of times must be at least 1")
         body = body[: match.start()] + body[match.end() :]
 
+    body = re.sub(r"\b(every|each)-", r"\1 ", body)
     tokens = re.sub(r",|\band\b", " ", body).split()
+    tokens = [part for token in tokens for part in _GLUED.get(token, [token])]
+    tokens = [_singular_day(token) for token in tokens]
     if tokens and tokens[0] in ("every", "each", "repeat", "repeats"):
         tokens = tokens[1:]
     if not tokens:
@@ -202,6 +216,13 @@ def parse_recurrence(text: str) -> RecurrenceRule | None:
     rule.until = until
     rule.count = count
     return rule
+
+
+def _singular_day(token: str) -> str:
+    """ "mondays" -> "monday" ("every mondays" / "fridays" read naturally)."""
+    if token not in WEEKDAY_ALIASES and token.endswith("s") and token[:-1] in WEEKDAY_ALIASES:
+        return token[:-1]
+    return token
 
 
 def _parse_pattern(tokens: list[str]) -> RecurrenceRule:

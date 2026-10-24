@@ -211,6 +211,10 @@ class NokkamApp(App):
             "Progress and time tracked per project",
             self._cmd_open_project_summary,
         )
+        yield SystemCommand("Habits", "Streaks for your recurring tasks", self._cmd_open_habits)
+        yield SystemCommand(
+            "Time report", "Chart of time tracked per project and day", self._cmd_open_time_report
+        )
         yield SystemCommand("Pomodoro", "Start a 25/5 focus timer", self.action_open_pomodoro)
         yield SystemCommand(
             "Smart list: Today", "Show only tasks due today", lambda: self._cmd_smart_list("today")
@@ -278,6 +282,12 @@ class NokkamApp(App):
         from nokkam.presentation.screens.stats_screen import StatsScreen
 
         self.push_screen(StatsScreen())
+
+    def _cmd_open_habits(self) -> None:
+        self._goto_home().action_open_habits()
+
+    def _cmd_open_time_report(self) -> None:
+        self._goto_home().action_open_time_report()
 
     def _cmd_open_project_summary(self) -> None:
         self._goto_home()

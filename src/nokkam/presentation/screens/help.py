@@ -25,6 +25,8 @@ HELP_TEXT = """\
   w          open agenda (next 14 days)
   S          open stats
   O          projects overview (progress + time per project)
+  H          habits (streaks for recurring tasks)
+  T          time report (chart of time per project and per day)
   P          open Pomodoro (25/5 focus timer)
   R          sync configured .ics calendars now
 

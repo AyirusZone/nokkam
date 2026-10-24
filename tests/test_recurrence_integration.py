@@ -286,7 +286,9 @@ async def test_edit_form_shows_the_rule_as_text_and_keeps_it_when_unchanged(tmp_
         assert after.recurrence_id == task.recurrence_id  # same row, not a duplicate
 
 
-async def test_editing_the_rule_creates_a_new_one_and_clearing_removes_it(tmp_path: Path) -> None:
+async def test_editing_the_rule_updates_the_series_in_place_and_clearing_removes_it(
+    tmp_path: Path,
+) -> None:
     app = make_app(tmp_path)
     async with app.run_test() as pilot:
         await fill_and_save(app, pilot, "Gym", "every day")
@@ -300,7 +302,7 @@ async def test_editing_the_rule_creates_a_new_one_and_clearing_removes_it(tmp_pa
         await pilot.click("#save")
         await pilot.pause()
         (changed,) = app.task_service.list_tasks()
-        assert changed.recurrence_id != task.recurrence_id
+        assert changed.recurrence_id == task.recurrence_id  # same series, new rule
         assert app.recurrence_repo.get(changed.recurrence_id).weekdays == (0, 1, 2, 3, 4)
 
         await pilot.press("e")
@@ -326,3 +328,230 @@ async def test_quick_add_dialog_creates_a_recurring_task(tmp_path: Path) -> None
         assert (task.title, task.due_time) == ("Standup", "09:30")
         assert task.due_date is not None
         assert app.recurrence_repo.get(task.recurrence_id).weekdays == (0, 1, 2, 3, 4)
+
+
+# ---- "everyday" in quick add ----
+
+
+@pytest.mark.parametrize(
+    ("text", "title", "has_time"),
+    [
+        ("Stretch everyday", "Stretch", False),
+        ("Stretch everyday 9am", "Stretch", True),
+        ("Stretch everyday until 2026-12-31", "Stretch", False),
+    ],
+)
+def test_quick_add_reads_everyday_at_the_end_of_the_phrase(
+    text: str, title: str, has_time: bool
+) -> None:
+    result = parse(text)
+    assert result.title == title
+    assert result.recurrence is not None and result.recurrence.rule == "daily"
+    assert (result.due_time is not None) is has_time
+
+
+@pytest.mark.parametrize(
+    "text", ["Buy everyday essentials", "Everyday carry list", "Fix everyday bug now"]
+)
+def test_quick_add_leaves_everyday_alone_as_an_adjective(text: str) -> None:
+    result = parse(text)
+    assert result.recurrence is None
+    assert result.title == text
+
+
+# ---- preset intervals in the form ----
+
+
+from textual.widgets import Select  # noqa: E402
+
+from nokkam.presentation.widgets.recurrence_presets import (  # noqa: E402
+    CUSTOM,
+    RECURRENCE_PRESETS,
+    preset_for,
+)
+
+
+def test_every_preset_parses_and_round_trips() -> None:
+    from nokkam.domain.recurrence import parse_recurrence
+
+    for label, value in RECURRENCE_PRESETS:
+        if value in ("", CUSTOM):
+            continue
+        parsed = parse_recurrence(value)
+        assert parsed is not None, label
+        assert format_recurrence(parsed) == value  # so editing shows the same preset back
+
+
+def test_preset_lists_the_common_intervals_first_and_custom_last() -> None:
+    labels = [label for label, _ in RECURRENCE_PRESETS]
+    assert labels[0] == "None" and labels[-1] == "Custom…"
+    for expected in (
+        "Every day",
+        "Every weekday",
+        "Every week",
+        "Every 2 weeks",
+        "Every month",
+        "Every year",
+    ):
+        assert expected in labels
+    assert len({value for _, value in RECURRENCE_PRESETS}) == len(RECURRENCE_PRESETS)
+
+
+@pytest.mark.parametrize(
+    ("text", "value"),
+    [
+        ("", ""),
+        ("every day", "every day"),
+        ("Every Weekday", "every weekday"),
+        ("every 2 weeks on mon,thu", CUSTOM),
+        ("every first tue", CUSTOM),
+        ("every day until 2026-12-31", CUSTOM),
+    ],
+)
+def test_preset_for(text: str, value: str) -> None:
+    assert preset_for(text) == value
+
+
+async def test_picking_a_preset_fills_the_field_and_saves_that_rule(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await pilot.press("a")
+        await pilot.pause()
+        app.screen.query_one("#title", Input).value = "Stretch"
+        app.screen.query_one("#recurrence-preset", Select).value = "every weekday"
+        await pilot.pause()
+        assert app.screen.query_one("#recurrence", Input).value == "every weekday"
+
+        await pilot.click("#save")
+        await pilot.pause()
+        (task,) = app.task_service.list_tasks()
+        assert app.recurrence_repo.get(task.recurrence_id).weekdays == (0, 1, 2, 3, 4)
+
+
+async def test_none_preset_clears_a_previous_choice(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await pilot.press("a")
+        await pilot.pause()
+        app.screen.query_one("#recurrence-preset", Select).value = "every month"
+        await pilot.pause()
+        app.screen.query_one("#recurrence-preset", Select).value = ""
+        await pilot.pause()
+        assert app.screen.query_one("#recurrence", Input).value == ""
+
+
+async def test_custom_preset_focuses_the_field_without_touching_it(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await pilot.press("a")
+        await pilot.pause()
+        app.screen.query_one("#recurrence", Input).value = "every 2 weeks on mon,thu"
+        app.screen.query_one("#recurrence-preset", Select).value = CUSTOM
+        await pilot.pause()
+        assert app.screen.focused.id == "recurrence"
+        assert app.screen.query_one("#recurrence", Input).value == "every 2 weeks on mon,thu"
+
+
+async def test_typing_everyday_in_the_form_now_works(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await fill_and_save(app, pilot, "Water plants", "everyday")
+        (task,) = app.task_service.list_tasks()
+        assert app.recurrence_repo.get(task.recurrence_id) == RecurrenceRule(rule="daily")
+
+
+async def test_edit_form_preselects_the_matching_preset_or_custom(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await fill_and_save(app, pilot, "Plain", "every 2 weeks")
+        await fill_and_save(app, pilot, "Fancy", "every 2 weeks on mon,thu")
+        by_title = {t.title: t for t in app.task_service.list_tasks()}
+
+        for title, expected in (("Plain", "every 2 weeks"), ("Fancy", CUSTOM)):
+            app.screen.select_task_by_id(by_title[title].id)
+            await pilot.pause()
+            await pilot.press("e")
+            await pilot.pause()
+            assert app.screen.query_one("#recurrence-preset", Select).value == expected
+            await pilot.press("escape")
+            await pilot.pause()
+
+
+async def test_form_with_presets_fits_a_small_terminal(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.press("a")
+        await pilot.pause()
+        assert app.screen.query_one("#save").region.bottom <= 24
+        assert app.screen.query_one("#recurrence").size.width >= 24  # room for a typical rule
+
+
+# ---- a recurring task always gets a real due date (regression) ----
+
+
+async def test_add_form_backfills_a_due_date_for_a_dateless_recurring_task(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await fill_and_save(app, pilot, "Standup", "every weekday")
+        (task,) = app.task_service.list_tasks()
+        assert task.due_date is not None
+        assert date.fromisoformat(task.due_date).weekday() in (0, 1, 2, 3, 4)
+
+
+async def test_add_form_keeps_an_explicit_date_even_off_pattern(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await pilot.press("a")
+        await pilot.pause()
+        app.screen.query_one("#title", Input).value = "Gym"
+        app.screen.query_one("#due_date", Input).value = "2026-08-01"  # a Saturday
+        app.screen.query_one("#recurrence", Input).value = "every mon,wed,fri"
+        await pilot.click("#save")
+        await pilot.pause()
+        (task,) = app.task_service.list_tasks()
+        assert task.due_date == "2026-08-01"  # respected, not snapped forward
+
+
+async def test_non_recurring_task_still_has_no_default_due_date(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        await fill_and_save(app, pilot, "One-off", "")
+        (task,) = app.task_service.list_tasks()
+        assert task.due_date is None
+
+
+async def test_subtask_form_backfills_a_due_date_too(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        parent = app.task_service.add_task(Task(title="Parent"))
+        app.screen.refresh_all()
+        await pilot.pause()
+        app.screen.select_task_by_id(parent.id)
+        await pilot.pause()
+        await pilot.press("s")
+        await pilot.pause()
+        app.screen.query_one("#title", Input).value = "Sub"
+        app.screen.query_one("#recurrence", Input).value = "every month"
+        await pilot.click("#save")
+        await pilot.pause()
+
+        sub = next(t for t in app.task_service.list_tasks() if t.title == "Sub")
+        assert sub.due_date is not None
+
+
+async def test_editing_to_add_a_recurrence_backfills_a_due_date(tmp_path: Path) -> None:
+    app = make_app(tmp_path)
+    async with app.run_test() as pilot:
+        task = app.task_service.add_task(Task(title="Plain"))
+        app.screen.refresh_all()
+        await pilot.pause()
+        app.screen.select_task_by_id(task.id)
+        await pilot.pause()
+        await pilot.press("e")
+        await pilot.pause()
+        app.screen.query_one("#recurrence", Input).value = "every weekday"
+        await pilot.click("#save")
+        await pilot.pause()
+
+        (updated,) = app.task_service.list_tasks()
+        assert updated.due_date is not None

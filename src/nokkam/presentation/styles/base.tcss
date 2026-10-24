@@ -90,6 +90,14 @@ TaskFormModal, HelpModal, QuickAddModal, PomodoroScreen {
     margin-right: 1;
 }
 
+#task-form #recurrence-preset {
+    width: 22;
+}
+
+#task-form #recurrence {
+    width: 1fr;
+}
+
 #task-form .form-actions {
     height: auto;
     margin-top: 1;
@@ -342,6 +350,25 @@ ProjectSummaryScreen {
 
 #project-summary-body {
     width: 88;
+    height: auto;
+    max-height: 90%;
+    padding: 1 2;
+}
+
+/* ---------- Habits / time report ---------- */
+HabitsScreen, TimeReportScreen {
+    align: center middle;
+}
+
+#habits-body {
+    width: 96;
+    height: auto;
+    max-height: 90%;
+    padding: 1 2;
+}
+
+#time-report-body {
+    width: 80;
     height: auto;
     max-height: 90%;
     padding: 1 2;

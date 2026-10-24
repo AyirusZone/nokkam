@@ -26,6 +26,24 @@ class RecurrenceRepository:
         assert cur.lastrowid is not None  # sqlite always assigns one on INSERT
         return cur.lastrowid
 
+    def update(self, recurrence_id: int, rule: RecurrenceRule) -> None:
+        """Change a series' rule in place, so every task already in the series
+        (and its habit history) stays attached to it."""
+        with self.conn:
+            self.conn.execute(
+                "UPDATE recurrence SET rule = ?, interval = ?, until = ?, count = ?, "
+                "weekdays = ?, nth = ? WHERE id = ?",
+                (
+                    rule.rule,
+                    rule.interval,
+                    rule.until,
+                    rule.count,
+                    ",".join(str(d) for d in rule.weekdays) or None,
+                    rule.nth,
+                    recurrence_id,
+                ),
+            )
+
     def get(self, recurrence_id: int) -> RecurrenceRule | None:
         row = self.conn.execute(
             "SELECT * FROM recurrence WHERE id = ?", (recurrence_id,)
