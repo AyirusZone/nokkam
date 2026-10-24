@@ -24,14 +24,21 @@ HELP_TEXT = """\
   A          quick add (free text, e.g. "Buy milk tmrw 3pm")
   w          open agenda (next 14 days)
   S          open stats
+  O          projects overview (progress + time per project)
+  H          habits (streaks for recurring tasks)
+  T          time report (chart of time per project and per day)
   P          open Pomodoro (25/5 focus timer)
   R          sync configured .ics calendars now
+
+[dim]Keys are rebindable under [[keys]] in ~/.nokkam/config.toml[/]
 
 [bold]Command palette[/]
   ctrl+k     open palette — fuzzy-search tasks to jump to them,
              or run: Add task, Quick add, Undo, Focus calendar,
              Open agenda, Show stats, Smart list: Today/Overdue/
              This week/All tasks
+             Filter tasks… / Save filter… / Filter: <name>
+             (e.g. project:Work tag:urgent priority:high due:week)
 
 [bold]Global[/]
   ctrl+t     toggle theme

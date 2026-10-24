@@ -46,8 +46,16 @@ machine.
 **Tasks**
 - Priority (high/medium/low), due date + time, projects, tags
 - Subtasks with indented tree display
-- Recurrence — daily/weekly/monthly; completing a recurring task
-  automatically spawns the next occurrence
+- Recurrence — pick a ready-made interval in the task form's **Repeats**
+  dropdown (every day, weekday, weekend, week, 2 weeks, month, 3 months,
+  year) or choose Custom… and type it in plain words; completing a recurring
+  task automatically spawns the next occurrence.
+  `every day`, `every 3 days`, `every 2 weeks`, `every weekday`,
+  `every weekend`, `every mon,wed,fri`, `every 2 weeks on mon,thu`,
+  `every month`, `every first tue`, `every last fri`, `every year` (one-word
+  `everyday` / `everyweek` and plurals like `mondays` work too); add
+  `until 2026-12-31` and/or `for 10 times` to end a series. Invalid text is
+  rejected with a hint instead of being ignored.
 - Dependencies — mark a task "blocked by" another; completing a blocked
   task is refused until its blocker is done
 - Undo — every add/edit/delete/toggle can be undone with `u`
@@ -58,7 +66,11 @@ machine.
 - The right-hand panes update live to whichever day is selected
 
 **Quick add** — free-text capture with natural-language dates:
-`Buy milk tmrw 3pm`, `Standup fri 9:30`, `Follow up in 3 days`
+`Buy milk tmrw 3pm`, `Standup fri 9:30`, `Follow up in 3 days` — and
+recurrence: `Standup every weekday 9:30`, `Book club every first tue`,
+`Water plants every 2 days`. A recurring task with no date starts on the
+first day the pattern fits. The same text works from the shell:
+`nokkam add "Pay rent every month"`.
 
 **Command palette** (`Ctrl+K`) — fuzzy-search tasks to jump to one, or run
 any action: Add task, Quick add, Undo, Focus calendar, Open agenda, Show
@@ -67,10 +79,32 @@ stats, Pomodoro, Smart list: Today/Overdue/This week/All
 **Smart lists** — Today, Overdue, This week, All (filters the task list
 in place; shown in the header)
 
+**Saved filters** — combine conditions in the command palette with
+`Filter tasks…`, or name one with `Save filter…` and recall it later as
+`Filter: <name>`. Syntax: `project:Work tag:urgent priority:high due:week`
+plus free words that must appear in the title. Different keys AND together;
+repeating a key ORs (`tag:a tag:b`). `due:` takes today, tomorrow, overdue,
+week, none or a date; open tasks only unless you add `status:all` or
+`status:done`. Quote values with spaces: `project:"Big Launch"`.
+
 **Agenda** — rolling 14-day view of everything upcoming, chronological
 
 **Stats** — completion rate, current streak, overdue count, and a
 GitHub-style contribution heatmap of the last 12 weeks
+
+**Projects overview** (`O`) — one row per project: done/total, open,
+overdue, a progress bar, total time tracked, and time tracked in the last
+7 days, plus a "No project" row for unassigned tasks
+
+**Habits** (`H`) — every recurring task is a habit. A completion counts if it
+was done on or before its due date; finishing late, or letting an occurrence
+go overdue, breaks the streak. Shows the current and best streak, the on-time
+rate, and the last 10 occurrences (■ on time, ▲ late, □ upcoming, ✗ missed).
+Changing a habit's repeat rule keeps its history.
+
+**Time report** (`T`) — bar chart of time tracked per project and a per-day
+column chart, switchable between the last 7 days, 30 days and all time
+(`1` / `2` / `3`). A tracked session counts on the day it started.
 
 **Time tracking** — start/stop a timer on the selected task (starting a
 new one stops whatever was running); **Pomodoro** — 25/5 focus timer with
@@ -155,6 +189,9 @@ has focus.
 | `A` | Quick add (free text with a natural-language date) |
 | `w` | Open agenda (next 14 days) |
 | `S` | Open stats |
+| `O` | Open projects overview (progress + time per project) |
+| `H` | Open habits (streaks for recurring tasks) |
+| `T` | Open time report (chart of time per project and per day) |
 | `P` | Open Pomodoro (25/5 focus timer) |
 | `Ctrl+T` | Toggle light/dark theme |
 | `Ctrl+K` | Command palette |
@@ -205,15 +242,40 @@ JSON and CSV round-trip tags by name; ICS is export-only.
 
 ## Configuration
 
-Optional — `~/.nokkam/config.toml`:
+Optional — `~/.nokkam/config.toml`. Every option is optional; these are the
+defaults:
 
 ```toml
 theme = "nokkam-dark"       # or "nokkam-light"
-accent = "#FF6B4A"       # any hex color; drives both themes' accent
+accent = "#FF6B4A"          # any hex color; drives both themes' accent
 db_path = "~/.nokkam/data.db"
+default_priority = "medium" # priority new tasks start with: high | medium | low
+first_weekday = "monday"    # calendar week starts on: monday | sunday
+# start_filter = "today"    # apply on launch: today | overdue | week | a saved filter's name
+# ics_sources = ["/path/to/calendar.ics", "https://example.com/cal.ics"]
+
+# icons = { flight = "✈", standup = "🗣" }   # keyword -> icon overrides
+
+# Rebind any home-screen or global key by its binding id. Separate several
+# keys with a comma. Only the keys shown here change; the rest keep defaults.
+[keys]
+# add_task = "n"
+# nav_left = "left,a"
 ```
 
-Nothing needs to be set — these are the defaults if the file is absent.
+A mistake in this file never stops nokkam from starting: bad TOML, a wrong
+value, an unknown option or binding name, or two actions on the same key are
+each reported as a warning notification (and the default is used).
+
+**Binding ids** for `[keys]` (default key in brackets): `nav_left` [left,h],
+`nav_right` [right,l], `nav_up` [up,k], `nav_down` [down,j], `prev_month` `[`,
+`next_month` `]`, `context_today_or_timer` [t], `pause_resume_timer` [p],
+`add_task` [a], `edit_task` [e], `delete_task` [d], `toggle_complete` [space],
+`undo` [u], `add_subtask` [s], `quick_add` [A], `open_agenda` [w],
+`open_stats` [S], `open_project_summary` [O], `open_habits` [H],
+`open_time_report` [T], `open_pomodoro` [P],
+`sync_calendars` [R], `show_help` [?], `toggle_theme` [ctrl+t],
+`command_palette` [ctrl+k], `quit` [q]. Dialogs keep their fixed keys.
 
 ## Development
 

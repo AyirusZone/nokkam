@@ -39,3 +39,33 @@ class TimeLogRepository:
             (task_id,),
         ).fetchone()
         return int(row["minutes"])
+
+    def minutes_by_task(self, since: str | None = None) -> dict[int, float]:
+        """Logged minutes per task (running timers count up to now). With
+        `since` (an ISO date), only log segments that started on or after
+        that date are counted."""
+        query = """SELECT task_id,
+                   SUM((julianday(COALESCE(end_at, datetime('now', 'localtime')))
+                        - julianday(start_at)) * 24 * 60) AS minutes
+                   FROM time_log"""
+        params: tuple[str, ...] = ()
+        if since is not None:
+            query += " WHERE start_at >= ?"
+            params = (since,)
+        rows = self.conn.execute(query + " GROUP BY task_id", params).fetchall()
+        return {r["task_id"]: float(r["minutes"]) for r in rows}
+
+    def minutes_by_task_and_day(self, since: str | None = None) -> list[tuple[int, str, float]]:
+        """(task_id, ISO day, minutes) rows; a segment counts on the day it
+        started. With `since` (an ISO date), only segments starting on or
+        after it."""
+        query = """SELECT task_id, date(start_at) AS day,
+                   SUM((julianday(COALESCE(end_at, datetime('now', 'localtime')))
+                        - julianday(start_at)) * 24 * 60) AS minutes
+                   FROM time_log"""
+        params: tuple[str, ...] = ()
+        if since is not None:
+            query += " WHERE start_at >= ?"
+            params = (since,)
+        rows = self.conn.execute(query + " GROUP BY task_id, day", params).fetchall()
+        return [(r["task_id"], r["day"], float(r["minutes"])) for r in rows]

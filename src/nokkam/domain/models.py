@@ -55,6 +55,15 @@ class Tag:
 
 
 @dataclass
+class SavedFilter:
+    """A named filter query (syntax in domain/filter_query.py)."""
+
+    name: str
+    query: str
+    id: int | None = None
+
+
+@dataclass
 class CalendarSource:
     """One configured read-only .ics feed (see AppConfig.ics_sources)."""
 

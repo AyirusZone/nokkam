@@ -8,6 +8,7 @@ import time
 from collections.abc import Iterable
 
 from textual.app import App, SystemCommand
+from textual.binding import Binding
 from textual.screen import Screen
 
 from nokkam.config import AppConfig, load_config
@@ -18,12 +19,16 @@ from nokkam.data.repositories.event_repository import EventRepository
 from nokkam.data.repositories.project_repository import ProjectRepository
 from nokkam.data.repositories.recurrence_repository import RecurrenceRepository
 from nokkam.data.repositories.reminder_repository import ReminderRepository
+from nokkam.data.repositories.saved_filter_repository import SavedFilterRepository
 from nokkam.data.repositories.tag_repository import TagRepository
 from nokkam.data.repositories.task_repository import TaskRepository
 from nokkam.data.repositories.time_log_repository import TimeLogRepository
+from nokkam.domain.filter_query import QueryError, parse_query
 from nokkam.infra.notification_adapter import send_notification
 from nokkam.presentation.command_provider import TaskSearchProvider
+from nokkam.presentation.keymap import build_keymap
 from nokkam.presentation.screens.home_screen import HomeScreen
+from nokkam.presentation.screens.text_prompt import TextPromptModal
 from nokkam.presentation.theme import build_themes
 from nokkam.presentation.widgets.app_header import AppHeader
 from nokkam.services.ics_service import IcsService
@@ -40,9 +45,9 @@ class NokkamApp(App):
     CSS_PATH = "presentation/styles/base.tcss"
     COMMANDS = App.COMMANDS | {TaskSearchProvider}
     BINDINGS = [
-        ("ctrl+t", "toggle_theme", "Toggle theme"),
-        ("ctrl+k", "command_palette", "Command palette"),
-        ("q", "quit", "Quit"),
+        Binding("ctrl+t", "toggle_theme", "Toggle theme", id="toggle_theme"),
+        Binding("ctrl+k", "command_palette", "Command palette", id="command_palette"),
+        Binding("q", "quit", "Quit", id="quit"),
     ]
 
     def __init__(self, config: AppConfig | None = None) -> None:
@@ -56,6 +61,7 @@ class NokkamApp(App):
         for theme in build_themes(self.config.accent):
             self.register_theme(theme)
         self.theme = self.config.theme
+        self._apply_config_keys()
 
         self.db = connect(self.config.db_path)
         apply_migrations(self.db)
@@ -65,6 +71,7 @@ class NokkamApp(App):
         self.tag_repo = TagRepository(self.db)
         self.recurrence_repo = RecurrenceRepository(self.db)
         self.dependency_repo = DependencyRepository(self.db)
+        self.saved_filter_repo = SavedFilterRepository(self.db)
         self.undo_stack = UndoStack()
         self.task_service = TaskService(
             self.task_repo, self.undo_stack, self.recurrence_repo, self.dependency_repo
@@ -83,6 +90,16 @@ class NokkamApp(App):
         self.set_interval(1, self._tick_header_timers)
         if self.config.ics_sources:
             self.sync_ics()
+
+    def _apply_config_keys(self) -> None:
+        """Applies [keys] overrides and surfaces config/keymap problems as
+        warnings — a typo in config.toml should never stop the app starting."""
+        defaults = [b for b in (*self.BINDINGS, *HomeScreen.BINDINGS) if isinstance(b, Binding)]
+        keymap, key_warnings = build_keymap(self.config.keys, defaults)
+        if keymap:
+            self.set_keymap(keymap)
+        for warning in (*self.config.warnings, *key_warnings):
+            self.notify(warning, title="config.toml", severity="warning", timeout=12)
 
     def on_unmount(self) -> None:
         if self.db is not None:
@@ -189,6 +206,15 @@ class NokkamApp(App):
             "Open agenda", "Rolling 14-day agenda of upcoming tasks", self._cmd_open_agenda
         )
         yield SystemCommand("Show stats", "Completion rate and streak", self._cmd_open_stats)
+        yield SystemCommand(
+            "Project summary",
+            "Progress and time tracked per project",
+            self._cmd_open_project_summary,
+        )
+        yield SystemCommand("Habits", "Streaks for your recurring tasks", self._cmd_open_habits)
+        yield SystemCommand(
+            "Time report", "Chart of time tracked per project and day", self._cmd_open_time_report
+        )
         yield SystemCommand("Pomodoro", "Start a 25/5 focus timer", self.action_open_pomodoro)
         yield SystemCommand(
             "Smart list: Today", "Show only tasks due today", lambda: self._cmd_smart_list("today")
@@ -208,6 +234,25 @@ class NokkamApp(App):
             "Clear the smart-list filter",
             lambda: self._cmd_smart_list(None),
         )
+        yield SystemCommand(
+            "Filter tasks…",
+            "Filter by e.g. project:Work tag:urgent priority:high due:week",
+            self._cmd_filter_tasks,
+        )
+        yield SystemCommand(
+            "Save filter…", "Name and save a filter query for reuse", self._cmd_save_filter
+        )
+        for saved in self.saved_filter_repo.list():
+            yield SystemCommand(
+                f"Filter: {saved.name}",
+                saved.query,
+                lambda saved=saved: self.apply_filter(saved.query, saved.name),
+            )
+            yield SystemCommand(
+                f"Delete filter: {saved.name}",
+                f"Remove the saved filter ({saved.query})",
+                lambda saved=saved: self._delete_filter(saved.name),
+            )
 
     def _goto_home(self) -> HomeScreen:
         while not isinstance(self.screen, HomeScreen):
@@ -238,8 +283,60 @@ class NokkamApp(App):
 
         self.push_screen(StatsScreen())
 
+    def _cmd_open_habits(self) -> None:
+        self._goto_home().action_open_habits()
+
+    def _cmd_open_time_report(self) -> None:
+        self._goto_home().action_open_time_report()
+
+    def _cmd_open_project_summary(self) -> None:
+        self._goto_home()
+        from nokkam.presentation.screens.project_summary_screen import ProjectSummaryScreen
+
+        self.push_screen(ProjectSummaryScreen())
+
     def _cmd_smart_list(self, filter_name: str | None) -> None:
         self._goto_home().set_smart_filter(filter_name)
+
+    def apply_filter(self, query_text: str, label: str) -> bool:
+        """Parse `query_text` and show it on the home screen; on a bad query
+        tells the user why and leaves the current view alone."""
+        try:
+            query = parse_query(query_text)
+        except QueryError as exc:
+            self.notify(str(exc), severity="error")
+            return False
+        self._goto_home().set_custom_filter(query, label)
+        return True
+
+    def _cmd_filter_tasks(self) -> None:
+        self._goto_home()
+
+        def on_query(text: str | None) -> None:
+            if text:
+                self.apply_filter(text, text)
+
+        self.push_screen(TextPromptModal("Filter tasks", "project:Work due:week"), on_query)
+
+    def _cmd_save_filter(self) -> None:
+        self._goto_home()
+
+        def on_name(name: str | None) -> None:
+            if not name:
+                return
+
+            def on_query(text: str | None) -> None:
+                if text and self.apply_filter(text, name):
+                    self.saved_filter_repo.save(name, text)
+                    self.notify(f"Saved filter '{name}'")
+
+            self.push_screen(TextPromptModal(f"Filter '{name}'", "project:Work due:week"), on_query)
+
+        self.push_screen(TextPromptModal("Save filter as", "Filter name"), on_name)
+
+    def _delete_filter(self, name: str) -> None:
+        self.saved_filter_repo.delete(name)
+        self.notify(f"Deleted filter '{name}'")
 
     def jump_to_task(self, task_id: int) -> None:
         self._goto_home().select_task_by_id(task_id)

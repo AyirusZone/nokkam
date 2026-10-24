@@ -18,8 +18,9 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, ListItem, ListView, Static, TabbedContent, TabPane
 
+from nokkam.domain.filter_query import TaskQuery
 from nokkam.domain.models import Event, Project, Status, Tag, Task
-from nokkam.domain.recurrence import RecurrenceRule
+from nokkam.domain.recurrence import RecurrenceRule, first_occurrence, format_recurrence
 from nokkam.presentation.screens.help import HelpModal
 from nokkam.presentation.screens.quick_add import QuickAddModal
 from nokkam.presentation.screens.task_form import TaskFormModal, TaskFormResult
@@ -90,27 +91,32 @@ class HomeScreen(Screen):
     app: NokkamApp
 
     BINDINGS = [
-        Binding("left,h", "nav_left", "Left", show=False),
-        Binding("right,l", "nav_right", "Right", show=False),
-        Binding("up,k", "nav_up", "Up", show=False),
-        Binding("down,j", "nav_down", "Down", show=False),
-        Binding("[", "prev_month", "Prev month"),
-        Binding("]", "next_month", "Next month"),
-        Binding("t", "context_today_or_timer", "Today/Timer"),
-        Binding("p", "pause_resume_timer", "Pause/Resume timer"),
-        Binding("a", "add_task", "Add"),
-        Binding("e", "edit_task", "Edit"),
-        Binding("d", "delete_task", "Delete"),
-        Binding("space", "toggle_complete", "Toggle"),
-        Binding("u", "undo", "Undo"),
-        Binding("s", "add_subtask", "Subtask"),
-        Binding("A", "quick_add", "Quick add"),
-        Binding("w", "open_agenda", "Agenda"),
-        Binding("S", "open_stats", "Stats"),
-        Binding("P", "open_pomodoro", "Pomodoro"),
-        Binding("R", "sync_calendars", "Sync calendars"),
-        Binding("question_mark", "show_help", "Help"),
+        Binding("left,h", "nav_left", "Left", show=False, id="nav_left"),
+        Binding("right,l", "nav_right", "Right", show=False, id="nav_right"),
+        Binding("up,k", "nav_up", "Up", show=False, id="nav_up"),
+        Binding("down,j", "nav_down", "Down", show=False, id="nav_down"),
+        Binding("[", "prev_month", "Prev month", id="prev_month"),
+        Binding("]", "next_month", "Next month", id="next_month"),
+        Binding("t", "context_today_or_timer", "Today/Timer", id="context_today_or_timer"),
+        Binding("p", "pause_resume_timer", "Pause/Resume timer", id="pause_resume_timer"),
+        Binding("a", "add_task", "Add", id="add_task"),
+        Binding("e", "edit_task", "Edit", id="edit_task"),
+        Binding("d", "delete_task", "Delete", id="delete_task"),
+        Binding("space", "toggle_complete", "Toggle", id="toggle_complete"),
+        Binding("u", "undo", "Undo", id="undo"),
+        Binding("s", "add_subtask", "Subtask", id="add_subtask"),
+        Binding("A", "quick_add", "Quick add", id="quick_add"),
+        Binding("w", "open_agenda", "Agenda", id="open_agenda"),
+        Binding("S", "open_stats", "Stats", id="open_stats"),
+        Binding("O", "open_project_summary", "Projects overview", id="open_project_summary"),
+        Binding("H", "open_habits", "Habits", id="open_habits"),
+        Binding("T", "open_time_report", "Time report", id="open_time_report"),
+        Binding("P", "open_pomodoro", "Pomodoro", id="open_pomodoro"),
+        Binding("R", "sync_calendars", "Sync calendars", id="sync_calendars"),
+        Binding("question_mark", "show_help", "Help", id="show_help"),
     ]
+
+    CUSTOM_FILTER = "custom"
 
     SMART_LIST_LABELS = {
         "today": "Today",
@@ -121,6 +127,10 @@ class HomeScreen(Screen):
     def __init__(self) -> None:
         super().__init__()
         self.smart_filter: str | None = None
+        # Set while smart_filter == CUSTOM_FILTER: a saved or ad-hoc query
+        # and the label shown for it in the header.
+        self.custom_query: TaskQuery | None = None
+        self.custom_label: str = ""
         self.selected_project_ids: set[int] = set()
         self.selected_tag_ids: set[int] = set()
 
@@ -128,7 +138,7 @@ class HomeScreen(Screen):
         yield AppHeader(subtitle="home")
         with Horizontal(id="home-body"):
             with Vertical(id="main-pane"):
-                yield CalendarGrid(id="calendar")
+                yield CalendarGrid(id="calendar", first_weekday=self.app.config.first_weekday)
                 with Vertical(id="day-pane"):
                     yield Static("", id="day-title", classes="accent-text")
                     yield ListView(id="day-tasks")
@@ -143,7 +153,27 @@ class HomeScreen(Screen):
 
     def on_mount(self) -> None:
         self.refresh_all()
+        self._apply_start_filter()
         self.all_list.focus()
+
+    def _apply_start_filter(self) -> None:
+        """Applies config.toml's `start_filter` (a smart list or saved filter)."""
+        name = self.app.config.start_filter
+        if not name:
+            return
+        if name.lower() in self.SMART_LIST_LABELS:
+            self.set_smart_filter(name.lower())
+            return
+        for saved in self.app.saved_filter_repo.list():
+            if saved.name.lower() == name.lower():
+                self.app.apply_filter(saved.query, saved.name)
+                return
+        self.app.notify(
+            f"start_filter '{name}' is not a smart list (today, overdue, week) "
+            "or a saved filter",
+            title="config.toml",
+            severity="warning",
+        )
 
     # ---- widget accessors ----
     @property
@@ -229,7 +259,9 @@ class HomeScreen(Screen):
         self.calendar.render_month()
 
     def _update_header_meta(self) -> None:
-        if self.smart_filter:
+        if self.smart_filter == self.CUSTOM_FILTER:
+            meta = self.custom_label
+        elif self.smart_filter:
             meta = self.SMART_LIST_LABELS[self.smart_filter]
         else:
             meta = self.calendar.focus_date.strftime("%B %Y")
@@ -342,24 +374,12 @@ class HomeScreen(Screen):
             items.extend(("task", task, depth) for task, depth in groups[key])
         return items
 
-    def _attached_project_ids(self) -> set[int]:
-        return {
-            t.project_id for t in self.app.task_service.list_tasks() if t.project_id is not None
-        }
-
-    def _attached_tag_ids(self) -> set[int]:
-        ids: set[int] = set()
-        for t in self.app.task_service.list_tasks():
-            ids.update(t.tag_ids)
-        return ids
-
     def _refresh_projects_list(self) -> None:
         select_index = self.projects_list.index
         lv = self.projects_list
         lv.clear()
-        attached = self._attached_project_ids()
-        self.selected_project_ids &= attached
-        projects = [p for p in self.app.project_repo.list() if p.id in attached]
+        projects = self.app.project_repo.list()
+        self.selected_project_ids &= {p.id for p in projects if p.id is not None}
         for project in projects:
             assert project.id is not None  # loaded from the repository
             lv.append(ProjectRow(project, selected=project.id in self.selected_project_ids))
@@ -370,9 +390,8 @@ class HomeScreen(Screen):
         select_index = self.tags_list.index
         lv = self.tags_list
         lv.clear()
-        attached = self._attached_tag_ids()
-        self.selected_tag_ids &= attached
-        tags = [tag for tag in self.app.tag_repo.list() if tag.id in attached]
+        tags = self.app.tag_repo.list()
+        self.selected_tag_ids &= {tag.id for tag in tags if tag.id is not None}
         for tag in tags:
             assert tag.id is not None  # loaded from the repository
             lv.append(TagRow(tag, selected=tag.id in self.selected_tag_ids))
@@ -421,7 +440,24 @@ class HomeScreen(Screen):
 
         self.app.push_screen(TextPromptModal("Add tag", "Tag name"), on_result)
 
+    def _custom_filter_tasks(self, query: TaskQuery) -> list[Task]:
+        project_names = {p.id: p.name for p in self.app.project_repo.list()}
+        tag_names = {t.id: t.name for t in self.app.tag_repo.list()}
+        today = date.today()
+        return [
+            t
+            for t in self.app.task_service.list_tasks()
+            if query.matches(
+                t,
+                project_name=project_names.get(t.project_id),
+                tag_names=[tag_names[i] for i in t.tag_ids if i in tag_names],
+                today=today,
+            )
+        ]
+
     def _smart_list_tasks(self) -> list[Task]:
+        if self.smart_filter == self.CUSTOM_FILTER and self.custom_query is not None:
+            return self._custom_filter_tasks(self.custom_query)
         today_iso = date.today().isoformat()
         open_tasks = self.app.task_service.list_tasks(status=Status.OPEN)
         if self.smart_filter == "today":
@@ -433,7 +469,17 @@ class HomeScreen(Screen):
             return [t for t in open_tasks if t.due_date and today_iso <= t.due_date <= week_end]
         return open_tasks
 
+    def set_custom_filter(self, query: TaskQuery, label: str) -> None:
+        """Show only tasks matching `query` in the task list (flat, like the
+        built-in smart lists); cleared by set_smart_filter(None)."""
+        self.custom_query = query
+        self.custom_label = label
+        self.smart_filter = self.CUSTOM_FILTER
+        self._update_header_meta()
+        self._refresh_all_tasks()
+
     def set_smart_filter(self, filter_name: str | None) -> None:
+        self.custom_query = None
         self.smart_filter = filter_name
         self._refresh_all_tasks()
         self._update_header_meta()
@@ -515,7 +561,7 @@ class HomeScreen(Screen):
                 title=result.title,
                 notes=result.notes,
                 priority=result.priority,
-                due_date=result.due_date,
+                due_date=self._default_due_date(result.due_date, result.recurrence),
                 due_time=result.due_time,
                 project_id=self._resolve_project(result.project_name),
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
@@ -543,7 +589,7 @@ class HomeScreen(Screen):
                 title=result.title,
                 notes=result.notes,
                 priority=result.priority,
-                due_date=result.due_date,
+                due_date=self._default_due_date(result.due_date, result.recurrence),
                 due_time=result.due_time,
                 project_id=self._resolve_project(result.project_name),
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
@@ -564,11 +610,26 @@ class HomeScreen(Screen):
         def on_result(result) -> None:
             if result is None or not result.title:
                 return
-            task = Task(title=result.title, due_date=result.due_date, due_time=result.due_time)
+            task = Task(
+                title=result.title,
+                due_date=result.due_date,
+                due_time=result.due_time,
+                priority=self.app.config.default_priority,
+                recurrence_id=self._resolve_recurrence(result.recurrence, None),
+            )
             self.app.task_service.add_task(task)
             self.refresh_all()
 
         self.app.push_screen(QuickAddModal(), on_result)
+
+    def _default_due_date(self, due_date: str | None, rule: RecurrenceRule | None) -> str | None:
+        """A recurring task needs a due date to ever be scheduled or show up
+        on the calendar — pick the first day the rule fits (today, if today
+        fits) when none was given. A non-recurring task, or one with an
+        explicit date, is left as-is."""
+        if due_date or rule is None:
+            return due_date
+        return first_occurrence(rule, date.today()).isoformat()
 
     def action_edit_task(self) -> None:
         task = self.selected_task
@@ -592,7 +653,7 @@ class HomeScreen(Screen):
                 title=result.title,
                 notes=result.notes,
                 priority=result.priority,
-                due_date=result.due_date,
+                due_date=self._default_due_date(result.due_date, result.recurrence),
                 due_time=result.due_time,
                 project_id=self._resolve_project(result.project_name),
                 tag_ids=self.app.tag_repo.get_or_create_many(result.tag_names),
@@ -609,7 +670,7 @@ class HomeScreen(Screen):
                 task=task,
                 project_name=project.name if project else "",
                 tag_names=", ".join(t.name for t in tags),
-                recurrence=recurrence_rule.rule if recurrence_rule else "",
+                recurrence=format_recurrence(recurrence_rule) if recurrence_rule else "",
                 blocked_by_title=blocker.title if blocker else "",
             ),
             on_result,
@@ -687,6 +748,21 @@ class HomeScreen(Screen):
 
         self.app.push_screen(StatsScreen())
 
+    def action_open_habits(self) -> None:
+        from nokkam.presentation.screens.habits_screen import HabitsScreen
+
+        self.app.push_screen(HabitsScreen())
+
+    def action_open_time_report(self) -> None:
+        from nokkam.presentation.screens.time_report_screen import TimeReportScreen
+
+        self.app.push_screen(TimeReportScreen())
+
+    def action_open_project_summary(self) -> None:
+        from nokkam.presentation.screens.project_summary_screen import ProjectSummaryScreen
+
+        self.app.push_screen(ProjectSummaryScreen())
+
     def action_open_pomodoro(self) -> None:
         self.app.action_open_pomodoro()
 
@@ -695,14 +771,19 @@ class HomeScreen(Screen):
             return None
         return self.app.project_repo.get_or_create(name)
 
-    def _resolve_recurrence(self, rule: str, existing_id: int | None) -> int | None:
-        if not rule:
+    def _resolve_recurrence(
+        self, rule: RecurrenceRule | None, existing_id: int | None
+    ) -> int | None:
+        """Id of the recurrence row for `rule`. Editing a recurring task's rule
+        updates its existing row in place rather than starting a new series, so
+        the habit history (and streak) follows the task."""
+        if rule is None:
             return None
         if existing_id is not None:
-            existing = self.app.recurrence_repo.get(existing_id)
-            if existing is not None and existing.rule == rule:
-                return existing_id
-        return self.app.recurrence_repo.create(RecurrenceRule(rule=rule))
+            if self.app.recurrence_repo.get(existing_id) != rule:
+                self.app.recurrence_repo.update(existing_id, rule)
+            return existing_id
+        return self.app.recurrence_repo.create(rule)
 
     def _resolve_blocker(self, title: str | None) -> int | None:
         if not title:

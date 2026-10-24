@@ -59,9 +59,7 @@ async def test_recurring_task_completion_spawns_next_visible_in_list(tmp_path: P
         await pilot.pause()
         app.screen.query_one("#title", Input).value = "Standup"
         app.screen.query_one("#due_date", Input).value = date.today().isoformat()
-        from textual.widgets import Select
-
-        app.screen.query_one("#recurrence", Select).value = "daily"
+        app.screen.query_one("#recurrence", Input).value = "daily"
         await pilot.click("#save")
         await pilot.pause()
 

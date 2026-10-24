@@ -4,15 +4,18 @@ the Textual UI entirely. Invoked from app.main() when argv has a subcommand."""
 from __future__ import annotations
 
 import argparse
+import sys
 
 from nokkam.config import AppConfig, load_config
 from nokkam.data.db import connect
 from nokkam.data.migrations import apply_migrations
 from nokkam.data.repositories.project_repository import ProjectRepository
+from nokkam.data.repositories.recurrence_repository import RecurrenceRepository
 from nokkam.data.repositories.tag_repository import TagRepository
 from nokkam.data.repositories.task_repository import TaskRepository
 from nokkam.domain.models import Priority, Task
 from nokkam.domain.nl_date_parser import parse_quick_text
+from nokkam.domain.recurrence import format_recurrence
 from nokkam.infra.export_adapter import (
     export_csv,
     export_ics,
@@ -56,6 +59,8 @@ def run_cli(argv: list[str], config: AppConfig | None = None) -> int:
         return 1
 
     config = config or load_config()
+    for warning in config.warnings:
+        print(f"warning: {warning}", file=sys.stderr)
     conn = connect(config.db_path)
     apply_migrations(conn)
     task_repo = TaskRepository(conn)
@@ -63,7 +68,14 @@ def run_cli(argv: list[str], config: AppConfig | None = None) -> int:
     tag_repo = TagRepository(conn)
     try:
         if args.command == "add":
-            return _cmd_add(args, task_repo, project_repo, tag_repo)
+            return _cmd_add(
+                args,
+                task_repo,
+                project_repo,
+                tag_repo,
+                RecurrenceRepository(conn),
+                config.default_priority,
+            )
         if args.command == "export":
             return _cmd_export(args, task_repo, tag_repo)
         if args.command == "import":
@@ -75,7 +87,12 @@ def run_cli(argv: list[str], config: AppConfig | None = None) -> int:
 
 
 def _cmd_add(
-    args, task_repo: TaskRepository, project_repo: ProjectRepository, tag_repo: TagRepository
+    args,
+    task_repo: TaskRepository,
+    project_repo: ProjectRepository,
+    tag_repo: TagRepository,
+    recurrence_repo: RecurrenceRepository,
+    default_priority: int = Priority.MEDIUM,
 ) -> int:
     parsed = parse_quick_text(args.text)
     due_date = args.due or parsed.due_date
@@ -83,12 +100,15 @@ def _cmd_add(
         title=parsed.title,
         due_date=due_date,
         due_time=parsed.due_time,
-        priority=_PRIORITY_MAP.get(args.priority, Priority.MEDIUM),
+        priority=_PRIORITY_MAP.get(args.priority, default_priority),
         project_id=project_repo.get_or_create(args.project) if args.project else None,
         tag_ids=tag_repo.get_or_create_many(args.tags.split(",")) if args.tags else [],
+        recurrence_id=recurrence_repo.create(parsed.recurrence) if parsed.recurrence else None,
     )
     task_id = task_repo.create(task)
     suffix = f" (due {due_date})" if due_date else ""
+    if parsed.recurrence:
+        suffix += f" ↻ {format_recurrence(parsed.recurrence)}"
     print(f"Added task #{task_id}: {parsed.title}{suffix}")
     return 0
 

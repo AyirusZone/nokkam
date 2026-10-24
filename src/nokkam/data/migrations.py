@@ -129,6 +129,27 @@ MIGRATIONS: list[tuple[int, str]] = [
         CREATE UNIQUE INDEX idx_event_calendar_uid ON event(calendar_id, uid);
         """,
     ),
+    (
+        4,
+        """
+        -- Named filter queries (see domain/filter_query.py for the syntax).
+        CREATE TABLE saved_filter (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+            query TEXT NOT NULL
+        );
+        """,
+    ),
+    (
+        5,
+        """
+        -- Richer recurrence (see domain/recurrence.py): repeat-on weekdays as
+        -- comma-separated 0-6 (Mon=0), and the nth weekday of a month
+        -- (1-4, or -1 for last). `rule` may now also be monthly_nth | yearly.
+        ALTER TABLE recurrence ADD COLUMN weekdays TEXT;
+        ALTER TABLE recurrence ADD COLUMN nth INTEGER;
+        """,
+    ),
 ]
 
 
